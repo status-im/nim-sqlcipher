@@ -1,3 +1,10 @@
 nimcache/
 nimblecache/
 htmldocs/
+libcrypto.a
+sqlcipher_abi.nim
+sqlite3.c
+sqlite3.h
+wrap
+main
+myDatabase
