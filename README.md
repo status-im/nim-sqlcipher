@@ -4,6 +4,18 @@
 
 A low-level Nim wrapper for the [SQLCipher](https://github.com/sqlcipher/sqlcipher). Builds and exposes the raw C API of SQLCipher.
 
+## Requirements
+```
+# Linux
+sudo apt install libssl-dev
+
+# MacOS
+brew install openssl
+
+# Windows
+¯\_(ツ)_/¯
+```
+
 ## Usage
 
 TODO
