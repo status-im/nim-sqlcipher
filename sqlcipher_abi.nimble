@@ -5,7 +5,6 @@ version       = "0.1.0"
 author        = "Status Research & Development GmbH"
 description   = "A wrapper for SQLCipher"
 license       = "MIT"
-installFiles  = @["sqlcipher_abi.nim", "sqlite3.c", "sqlite3.h"]
 
 # Dependencies
 requires "nim >= 1.0.0"
