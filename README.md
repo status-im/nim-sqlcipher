@@ -1,4 +1,4 @@
-# nim-sqlcipher
+# nim-sqlcipher-abi
 [![License: MIT](https://img.shields.io/badge/License-MIT-blue.svg)](https://opensource.org/licenses/MIT)
 ![Stability: experimental](https://img.shields.io/badge/stability-experimental-orange.svg)
 
