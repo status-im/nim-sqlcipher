@@ -1,9 +1,12 @@
 import sqlcipher_abi
 
-# TODO: ask about this
+
 {.passL: "-lpthread".}
+
+
+
+# TODO: ask about this
 {.passL: "../libcrypto.a".}
-{.passC: "-DSQLITE_HAS_CODEC".}
 
 when isMainModule:
   var
