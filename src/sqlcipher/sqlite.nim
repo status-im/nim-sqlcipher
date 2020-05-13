@@ -1,5 +1,5 @@
-import nimterop/[cimport, build, paths]
-import os, strutils
+import nimterop/[cimport, build]
+import os
 
 const
   baseDir = getProjectCacheDir("nim-sqlcipher") 
@@ -23,7 +23,6 @@ static:
     "sqlite3_vmprintf",
     "sqlite3_vsnprintf",
     "sqlite3_str_vappendf",
-    
     "sqlite3_destructor_type"
     ])
 
@@ -35,8 +34,7 @@ cPlugin:
   import strutils
 
   # Symbol renaming examples
-  proc onSymbol*(sym: var Symbol) {.exportc, dynlib.} =
-    # Remove prefixes or suffixes from procs
+  proc onSymbol*(sym: var Symbol) {.exportc, dynlib.} =    # Remove prefixes or suffixes from procs
     if sym.kind == nskProc and sym.name.contains("sqlite3_"):
       sym.name = sym.name.replace("sqlite3_", "")
 

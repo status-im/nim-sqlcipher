@@ -1,5 +1,7 @@
-import std / [strutils, options, macros, typetraits]
+import std / [options, macros, typetraits]
 from sqlcipher/sqlite as sqlite import nil
+
+# Adapted from https://github.com/GULPF/tiny_sqlite
 
 type
     DbConn* = ptr sqlite.sqlite3
@@ -41,6 +43,12 @@ type
         of sqliteNull:
             discard
 
+    Tbind_destructor_func* = proc (para1: pointer){.cdecl, locks: 0, tags: [], raises: [], gcsafe.}
+
+const
+    SQLITE_STATIC* = nil
+    SQLITE_TRANSIENT* = cast[Tbind_destructor_func](-1)
+
 proc newSqliteError(db: DbConn, errorCode: int32): ref SqliteError =
     ## Raises a SqliteError exception.
     (ref SqliteError)(
@@ -52,10 +60,10 @@ template checkRc(db: DbConn, rc: int32) =
     if rc != sqlite.SQLITE_OK:
         raise newSqliteError(db, rc)
 
-#[proc prepareSql(db: DbConn, sql: string, params: seq[DbValue]): PreparedSql
+proc prepareSql(db: DbConn, sql: string, params: seq[DbValue]): ptr PreparedSql
         {.raises: [SqliteError].} =
     var tail: cstring
-    let rc = sqlite.prepare_v2(db, sql.cstring, sql.len.cint, result, tail)
+    let rc = sqlite.prepare_v2(db, sql.cstring, sql.len.cint, addr result, addr tail)
     assert tail.len == 0,
         "`exec` and `execMany` can only be used with a single SQL statement. " &
         "To execute several SQL statements, use `execScript`"
@@ -69,15 +77,15 @@ template checkRc(db: DbConn, rc: int32) =
             of sqliteInteger:    sqlite.bind_int64(result, idx, value.intval)
             of sqliteReal:  sqlite.bind_double(result, idx, value.floatVal)
             of sqliteText: sqlite.bind_text(result, idx, value.strVal.cstring,
-                value.strVal.len.int32, sqlite.SQLITE_TRANSIENT)
+                value.strVal.len.int32, SQLITE_TRANSIENT)
             of sqliteBlob:   sqlite.bind_blob(result, idx.int32,
                 cast[string](value.blobVal).cstring,
-                value.blobVal.len.int32, sqlite.SQLITE_TRANSIENT)
+                value.blobVal.len.int32, SQLITE_TRANSIENT)
 
         sqlite.db_handle(result).checkRc(rc)
         idx.inc
 
-proc next(prepared: PreparedSql): bool =
+proc next(prepared: ptr PreparedSql): bool =
     ## Advance cursor by one row.
     ## Return ``true`` if there are more rows.
     let rc = sqlite.step(prepared)
@@ -88,10 +96,12 @@ proc next(prepared: PreparedSql): bool =
     else:
         raise newSqliteError(sqlite.db_handle(prepared), rc)
 
-proc finalize(prepared: PreparedSql) =
+
+proc finalize(prepared: ptr PreparedSql) =
     ## Finalize statement or raise SqliteError if not successful.
     let rc = sqlite.finalize(prepared)
     sqlite.db_handle(prepared).checkRc(rc)
+
 
 proc toDbValue*[T: Ordinal](val: T): DbValue =
     DbValue(kind: sqliteInteger, intVal: val.int64)
@@ -136,6 +146,9 @@ proc fromDbValue*[T](val: DbValue, _: typedesc[Option[T]]): Option[T] =
     else:
         some(val.fromDbValue(T))
 
+
+# TODO: uncomment and test
+#[
 proc unpack*[T: tuple](row: openArray[DbValue], _: typedesc[T]): T =
     ## Call ``fromDbValue`` on each element of ``row`` and return it
     ## as a tuple.
@@ -161,6 +174,7 @@ proc exec*(db: DbConn, sql: string, params: varargs[DbValue, toDbValue]) =
     defer: prepared.finalize()
     discard prepared.next
 
+# TODO: uncomment and test
 proc execMany*(db: DbConn, sql: string, params: seq[seq[DbValue]]) =
     ## Executes ``sql`` repeatedly using each element of ``params`` as parameters.
     assert (not db.isNil), "Database is nil"
@@ -174,6 +188,7 @@ proc execScript*(db: DbConn, sql: string) =
     let rc = sqlite.exec(db, sql.cstring, nil, nil, nil)
     db.checkRc(rc)
 
+# TODO: uncomment and test
 #[
 template transaction*(db: DbConn, body: untyped) =
     db.exec("BEGIN")
@@ -188,8 +203,9 @@ template transaction*(db: DbConn, body: untyped) =
     finally:
         if ok:
             db.exec("COMMIT")
+]#
 
-proc readColumn(prepared: PreparedSql, col: int32): DbValue =
+proc readColumn(prepared: ptr PreparedSql, col: int32): DbValue =
     let columnType = sqlite.column_type(prepared, col)
     case columnType
     of sqlite.SQLITE_INTEGER:
@@ -228,7 +244,7 @@ proc rows*(db: DbConn, sql: string,
     ## Executes the query and returns the resulting rows.
     for row in db.rows(sql, params):
         result.add row
-]#
+
 proc openDatabase*(path: string, mode = dbReadWrite): DbConn =
     ## Open a new database connection to a database file. To create a
     ## in-memory database the special path `":memory:"` can be used.
@@ -260,7 +276,10 @@ proc close*(db: DbConn) =
     ## Closes the database connection.
     let rc = sqlite.close(db)
     db.checkRc(rc)
+
+# TODO: test
 #[
+
 proc lastInsertRowId*(db: DbConn): int64 =
     ## Get the row id of the last inserted row.
     ## For tables with an integer primary key,
@@ -281,5 +300,4 @@ proc changes*(db: DbConn): int32 =
 proc isReadonly*(db: DbConn): bool =
     ## Returns true if ``db`` is in readonly mode.
     sqlite.db_readonly(db, "main") == 1
-
 ]#

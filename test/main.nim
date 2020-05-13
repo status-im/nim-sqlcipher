@@ -1,7 +1,6 @@
 import sqlcipher
 import times
 import strformat
-import os
 
 when isMainModule:
   let db: DbConn = openDatabase("./myDatabase")
@@ -17,4 +16,4 @@ when isMainModule:
 
   execScript(db, &"""insert into Log values("{date}:{time}")""")
 
-  #echo rows(db, "select * from Log")
+  echo rows(db, "select * from Log")
