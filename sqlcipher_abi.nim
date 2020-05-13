@@ -5,6 +5,18 @@ const
   baseDir = getProjectCacheDir("sqlcipher_abi") 
 
 static:
+  gitPull("https://github.com/sqlcipher/sqlcipher", outdir = baseDir, checkout = "v4.4.0")
+
+  configure(baseDir, "./Makefile", """--enable-tempstore=yes CFLAGS="-DSQLITE_HAS_CODEC" LDFLAGS="-lcrypto"""")
+
+  make(baseDir, "sqlite3.c", "sqlite3.c")
+
+  {.passC: "-DSQLITE_HAS_CODEC".}
+
+  # TODO: determine if these are OS specific
+  {.passL: "-lpthread".}
+  {.passL: "-lcrypto".}
+
    # uses va_list which is undefined
   cSkipSymbol(@[
     # uses va_list which is undefined
@@ -14,18 +26,6 @@ static:
     
     "sqlite3_destructor_type"
     ])
-
-  gitPull("https://github.com/sqlcipher/sqlcipher", outdir = baseDir, checkout = "v4.4.0")
-
-  configure(baseDir, "Makefile", """--enable-tempstore=yes CFLAGS="-DSQLITE_HAS_CODEC" LDFLAGS="-lcrypto"""")
-
-  make(baseDir, "sqlite3.c", "sqlite3.c")
-
-  {.passC: "-DSQLITE_HAS_CODEC".}
-
-  # TODO: determine if these are OS specific
-  {.passL: "-lpthread".}
-  {.passL: "-lcrypto".}
 
   cDefine("SQLITE_HAS_CODEC")
 
