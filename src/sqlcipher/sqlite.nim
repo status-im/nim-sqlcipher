@@ -2,7 +2,7 @@ import nimterop/[cimport, build, paths]
 import os, strutils
 
 const
-  baseDir = getProjectCacheDir("sqlcipher_abi") 
+  baseDir = getProjectCacheDir("nim-sqlcipher") 
 
 static:
   gitPull("https://github.com/sqlcipher/sqlcipher", outdir = baseDir, checkout = "v4.4.0")
@@ -31,6 +31,16 @@ static:
 
   cCompile(baseDir / "sqlite3.c")
 
+cPlugin:
+  import strutils
+
+  # Symbol renaming examples
+  proc onSymbol*(sym: var Symbol) {.exportc, dynlib.} =
+    # Remove prefixes or suffixes from procs
+    if sym.kind == nskProc and sym.name.contains("sqlite3_"):
+      sym.name = sym.name.replace("sqlite3_", "")
+
 cImport(baseDir/"sqlite3.h", flags = "-f:ast2")
+
 
 #TODO: flag for static linking?
