@@ -1,8 +1,9 @@
-# nim-sqlcipher-abi
+# nim-sqlcipher
 [![License: MIT](https://img.shields.io/badge/License-MIT-blue.svg)](https://opensource.org/licenses/MIT)
 ![Stability: experimental](https://img.shields.io/badge/stability-experimental-orange.svg)
 
-A low-level Nim wrapper for the [SQLCipher](https://github.com/sqlcipher/sqlcipher). Builds and exposes the raw C API of SQLCipher.
+A nim wrapper for the [SQLCipher](https://github.com/sqlcipher/sqlcipher). 
+It builds SQLCipher and provides a simple API based on the [Tiny_SQLite](https://github.com/GULPF/tiny_sqlite) nimble package
 
 ## Requirements
 ```
@@ -20,10 +21,6 @@ brew install openssl
 
 TODO
 
-## Versioning
-
-The library generally follows the upstream version number, adding one more number for its own purpose
-
 ## License
 
 ### Wrapper License
@@ -36,3 +33,4 @@ This repository is licensed and distributed under either of
 
 - SQLCipher https://github.com/sqlcipher/sqlcipher/blob/master/LICENSE
 - OpenSSL https://github.com/openssl/openssl/blob/master/LICENSE
+- TinySQLite https://github.com/GULPF/tiny_sqlite/blob/master/LICENSE
