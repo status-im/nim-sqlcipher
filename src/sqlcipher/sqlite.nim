@@ -19,6 +19,7 @@ static:
 
    # uses va_list which is undefined
   cSkipSymbol(@[
+    "sqlite3_version",
     # uses va_list which is undefined
     "sqlite3_vmprintf",
     "sqlite3_vsnprintf",
@@ -28,7 +29,7 @@ static:
 
   cDefine("SQLITE_HAS_CODEC")
 
-  cCompile(baseDir / "sqlite3.c")
+cCompile(baseDir / "sqlite3.c")
 
 cPlugin:
   import strutils
