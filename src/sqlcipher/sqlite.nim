@@ -1,5 +1,5 @@
-
-
+{.compile: "../../../vendor/sqlcipher/sqlite3.c".}
+{.passC: "-DSQLITE_HAS_CODEC".}
 {.push hint[ConvFromXtoItselfNotNeeded]: off.}
 
 # const 'SQLITE_EXTERN' has unsupported value 'extern'
@@ -31,6 +31,7 @@
 # type 'fts5_tokenizer' is duplicate, skipped
 # type 'fts5_api' is duplicate, skipped
 
+{.pragma: impsqlite3Hdr, header: "../../../vendor/sqlcipher/sqlite3.h".}
 {.experimental: "codeReordering".}
 const
   SQLITE_VERSION* = "3.31.0"
@@ -539,8 +540,8 @@ const
   FTS5_TOKENIZE_AUX* = 0x00000008
   FTS5_TOKEN_COLOCATED* = 0x00000001
 type
-  sqlite3* {.importc, incompleteStruct.} = object
-  sqlite_int64* {.importc.} = clonglong ## ```
+  sqlite3* {.importc, impsqlite3Hdr, incompleteStruct.} = object
+  sqlite_int64* {.importc, impsqlite3Hdr.} = clonglong ## ```
                                                   ##   * CAPI3REF: 64-Bit Integer Types
                                                   ##  * KEYWORDS: sqlite_int64 sqlite_uint64
                                                   ##  *
@@ -556,17 +557,17 @@ type
                                                   ##  * sqlite3_uint64 and sqlite_uint64 types can store integer values 
                                                   ##  * between 0 and +18446744073709551615 inclusive.
                                                   ## ```
-  sqlite_uint64* {.importc.} = culonglong
-  sqlite3_int64* {.importc.} = sqlite_int64
-  sqlite3_uint64* {.importc.} = sqlite_uint64
-  sqlite3_callback* {.importc.} = proc (a1: pointer; a2: cint;
+  sqlite_uint64* {.importc, impsqlite3Hdr.} = culonglong
+  sqlite3_int64* {.importc, impsqlite3Hdr.} = sqlite_int64
+  sqlite3_uint64* {.importc, impsqlite3Hdr.} = sqlite_uint64
+  sqlite3_callback* {.importc, impsqlite3Hdr.} = proc (a1: pointer; a2: cint;
       a3: ptr cstring; a4: ptr cstring): cint {.cdecl.}
-  sqlite3_file* {.importc, bycopy.} = object
+  sqlite3_file* {.importc, impsqlite3Hdr, bycopy.} = object
     pMethods*: ptr sqlite3_io_methods ## ```
                                    ##   Methods for an open file
                                    ## ```
   
-  sqlite3_io_methods* {.importc, bycopy.} = object
+  sqlite3_io_methods* {.importc, impsqlite3Hdr, bycopy.} = object
     iVersion*: cint
     xClose*: proc (a1: ptr sqlite3_file): cint {.cdecl.}
     xRead*: proc (a1: ptr sqlite3_file; a2: pointer; iAmt: cint; iOfst: sqlite3_int64): cint {.
@@ -602,9 +603,9 @@ type
                                                                                   ##      Additional methods may be added in future releases
                                                                                   ## ```
   
-  sqlite3_mutex* {.importc, incompleteStruct.} = object
-  sqlite3_api_routines* {.importc, incompleteStruct.} = object
-  sqlite3_vfs* {.importc, bycopy.} = object
+  sqlite3_mutex* {.importc, impsqlite3Hdr, incompleteStruct.} = object
+  sqlite3_api_routines* {.importc, impsqlite3Hdr, incompleteStruct.} = object
+  sqlite3_vfs* {.importc, impsqlite3Hdr, bycopy.} = object
     iVersion*: cint            ## ```
                   ##   Structure version number (currently 3)
                   ## ```
@@ -660,8 +661,8 @@ type
                                                                            ##    * value will increment whenever this happens.
                                                                            ## ```
   
-  sqlite3_syscall_ptr* {.importc.} = proc () {.cdecl.}
-  sqlite3_mem_methods* {.importc, bycopy.} = object
+  sqlite3_syscall_ptr* {.importc, impsqlite3Hdr.} = proc () {.cdecl.}
+  sqlite3_mem_methods* {.importc, impsqlite3Hdr, bycopy.} = object
     xMalloc*: proc (a1: cint): pointer {.cdecl.} ## ```
                                            ##   Memory allocation function
                                            ## ```
@@ -687,10 +688,10 @@ type
                      ##   Argument to xInit() and xShutdown()
                      ## ```
   
-  sqlite3_stmt* {.importc, incompleteStruct.} = object
-  sqlite3_value* {.importc, incompleteStruct.} = object
-  sqlite3_context* {.importc, incompleteStruct.} = object
-  sqlite3_vtab* {.importc, bycopy.} = object ## ```
+  sqlite3_stmt* {.importc, impsqlite3Hdr, incompleteStruct.} = object
+  sqlite3_value* {.importc, impsqlite3Hdr, incompleteStruct.} = object
+  sqlite3_context* {.importc, impsqlite3Hdr, incompleteStruct.} = object
+  sqlite3_vtab* {.importc, impsqlite3Hdr, bycopy.} = object ## ```
                                                       ##   * CAPI3REF: Virtual Table Instance Object
                                                       ##  * KEYWORDS: sqlite3_vtab
                                                       ##  *
@@ -719,7 +720,7 @@ type
                     ##      Virtual table implementations will typically add additional fields
                     ## ```
   
-  sqlite3_index_info* {.importc, bycopy.} = object ## ```
+  sqlite3_index_info* {.importc, impsqlite3Hdr, bycopy.} = object ## ```
                                                             ##   * CAPI3REF: Virtual Table Indexing Information
                                                             ##  * KEYWORDS: sqlite3_index_info
                                                             ##  *
@@ -865,7 +866,7 @@ type
                            ##   Input: Mask of columns used by statement
                            ## ```
   
-  sqlite3_vtab_cursor* {.importc, bycopy.} = object ## ```
+  sqlite3_vtab_cursor* {.importc, impsqlite3Hdr, bycopy.} = object ## ```
                                                              ##   * CAPI3REF: Virtual Table Cursor Object
                                                              ##  * KEYWORDS: sqlite3_vtab_cursor {virtual table cursor}
                                                              ##  *
@@ -887,7 +888,7 @@ type
                           ##      Virtual table implementations will typically add additional fields
                           ## ```
   
-  sqlite3_module* {.importc, bycopy.} = object ## ```
+  sqlite3_module* {.importc, impsqlite3Hdr, bycopy.} = object ## ```
                                                         ##   * CAPI3REF: Virtual Table Object
                                                         ##  * KEYWORDS: sqlite3_module {virtual table module}
                                                         ##  *
@@ -948,7 +949,7 @@ type
                                                ##    * Those below are for version 3 and greater.
                                                ## ```
   
-  sqlite3_index_constraint* {.bycopy,
+  sqlite3_index_constraint* {.bycopy, impsqlite3Hdr,
                              importc: "struct sqlite3_index_constraint".} = object ## ```
                                                                                ##   Number of entries in aConstraint
                                                                                ## ```
@@ -965,7 +966,7 @@ type
                      ##   Used internally - xBestIndex should ignore
                      ## ```
   
-  sqlite3_index_orderby* {.bycopy,
+  sqlite3_index_orderby* {.bycopy, impsqlite3Hdr,
                           importc: "struct sqlite3_index_orderby".} = object ## ```
                                                                          ##   Number of terms in the ORDER BY clause
                                                                          ## ```
@@ -976,7 +977,7 @@ type
                 ##   True for DESC.  False for ASC.
                 ## ```
   
-  sqlite3_index_constraint_usage* {.bycopy, importc: "struct sqlite3_index_constraint_usage".} = object ## ```
+  sqlite3_index_constraint_usage* {.bycopy, impsqlite3Hdr, importc: "struct sqlite3_index_constraint_usage".} = object ## ```
                                                                                                                 ##   The ORDER BY clause 
                                                                                                                 ##      Outputs
                                                                                                                 ## ```
@@ -987,8 +988,8 @@ type
                 ##   Do not code a test for this constraint
                 ## ```
   
-  sqlite3_blob* {.importc, incompleteStruct.} = object
-  sqlite3_mutex_methods* {.importc, bycopy.} = object
+  sqlite3_blob* {.importc, impsqlite3Hdr, incompleteStruct.} = object
+  sqlite3_mutex_methods* {.importc, impsqlite3Hdr, bycopy.} = object
     xMutexInit*: proc (): cint {.cdecl.}
     xMutexEnd*: proc (): cint {.cdecl.}
     xMutexAlloc*: proc (a1: cint): ptr sqlite3_mutex {.cdecl.}
@@ -999,9 +1000,9 @@ type
     xMutexHeld*: proc (a1: ptr sqlite3_mutex): cint {.cdecl.}
     xMutexNotheld*: proc (a1: ptr sqlite3_mutex): cint {.cdecl.}
 
-  sqlite3_str* {.importc, incompleteStruct.} = object
-  sqlite3_pcache* {.importc, incompleteStruct.} = object
-  sqlite3_pcache_page* {.importc, bycopy.} = object
+  sqlite3_str* {.importc, impsqlite3Hdr, incompleteStruct.} = object
+  sqlite3_pcache* {.importc, impsqlite3Hdr, incompleteStruct.} = object
+  sqlite3_pcache_page* {.importc, impsqlite3Hdr, bycopy.} = object
     pBuf*: pointer             ## ```
                  ##   The content of the page
                  ## ```
@@ -1009,7 +1010,7 @@ type
                    ##   Extra information associated with the page
                    ## ```
   
-  sqlite3_pcache_methods2* {.importc, bycopy.} = object
+  sqlite3_pcache_methods2* {.importc, impsqlite3Hdr, bycopy.} = object
     iVersion*: cint
     pArg*: pointer
     xInit*: proc (a1: pointer): cint {.cdecl.}
@@ -1028,7 +1029,7 @@ type
     xDestroy*: proc (a1: ptr sqlite3_pcache) {.cdecl.}
     xShrink*: proc (a1: ptr sqlite3_pcache) {.cdecl.}
 
-  sqlite3_pcache_methods* {.importc, bycopy.} = object
+  sqlite3_pcache_methods* {.importc, impsqlite3Hdr, bycopy.} = object
     pArg*: pointer
     xInit*: proc (a1: pointer): cint {.cdecl.}
     xShutdown*: proc (a1: pointer) {.cdecl.}
@@ -1042,8 +1043,8 @@ type
     xTruncate*: proc (a1: ptr sqlite3_pcache; iLimit: cuint) {.cdecl.}
     xDestroy*: proc (a1: ptr sqlite3_pcache) {.cdecl.}
 
-  sqlite3_backup* {.importc, incompleteStruct.} = object
-  sqlite3_snapshot* {.bycopy, importc: "struct sqlite3_snapshot".} = object ## ```
+  sqlite3_backup* {.importc, impsqlite3Hdr, incompleteStruct.} = object
+  sqlite3_snapshot* {.bycopy, impsqlite3Hdr, importc: "struct sqlite3_snapshot".} = object ## ```
                                                                                     ##   * CAPI3REF: Database Snapshot
                                                                                     ##  * KEYWORDS: {snapshot} {sqlite3_snapshot}
                                                                                     ##  *
@@ -1065,7 +1066,7 @@ type
                                                                                     ## ```
     hidden*: array[48, cuchar]
 
-  sqlite3_rtree_geometry* {.importc, bycopy.} = object ## ```
+  sqlite3_rtree_geometry* {.importc, impsqlite3Hdr, bycopy.} = object ## ```
                                                                 ##   * A pointer to a structure of the following type is passed as the first
                                                                 ##  * argument to callbacks registered using rtree_geometry_callback().
                                                                 ## ```
@@ -1085,7 +1086,7 @@ type
                                        ##   Called by SQLite to clean up pUser
                                        ## ```
   
-  sqlite3_rtree_query_info* {.importc, bycopy.} = object ## ```
+  sqlite3_rtree_query_info* {.importc, impsqlite3Hdr, bycopy.} = object ## ```
                                                                   ##   * A pointer to a structure of the following type is passed as the 
                                                                   ##  * argument to scored geometry callback registered using
                                                                   ##  * sqlite3_rtree_query_callback().
@@ -1144,8 +1145,8 @@ type
                                    ##   Original SQL values of parameters
                                    ## ```
   
-  sqlite3_rtree_dbl* {.importc.} = cdouble
-  Fts5ExtensionApi* {.importc, bycopy.} = object ## ```
+  sqlite3_rtree_dbl* {.importc, impsqlite3Hdr.} = cdouble
+  Fts5ExtensionApi* {.importc, impsqlite3Hdr, bycopy.} = object ## ```
                                                           ##   * EXTENSION API FUNCTIONS
                                                           ##  *
                                                           ##  * xUserData(pFts):
@@ -1391,16 +1392,16 @@ type
     xPhraseNextColumn*: proc (a1: ptr Fts5Context; a2: ptr Fts5PhraseIter;
                             piCol: ptr cint) {.cdecl.}
 
-  Fts5Context* {.importc, incompleteStruct.} = object
-  Fts5PhraseIter* {.importc, bycopy.} = object
+  Fts5Context* {.importc, impsqlite3Hdr, incompleteStruct.} = object
+  Fts5PhraseIter* {.importc, impsqlite3Hdr, bycopy.} = object
     a*: ptr cuchar
     b*: ptr cuchar
 
-  fts5_extension_function* {.importc.} = proc (
+  fts5_extension_function* {.importc, impsqlite3Hdr.} = proc (
       pApi: ptr Fts5ExtensionApi; pFts: ptr Fts5Context; pCtx: ptr sqlite3_context;
       nVal: cint; apVal: ptr ptr sqlite3_value) {.cdecl.}
-  Fts5Tokenizer* {.importc, incompleteStruct.} = object
-  fts5_tokenizer* {.importc, bycopy.} = object
+  Fts5Tokenizer* {.importc, impsqlite3Hdr, incompleteStruct.} = object
+  fts5_tokenizer* {.importc, impsqlite3Hdr, bycopy.} = object
     xCreate*: proc (a1: pointer; azArg: ptr cstring; nArg: cint;
                   ppOut: ptr ptr Fts5Tokenizer): cint {.cdecl.}
     xDelete*: proc (a1: ptr Fts5Tokenizer) {.cdecl.}
@@ -1409,7 +1410,7 @@ type
         pToken: cstring; nToken: cint; iStart: cint; iEnd: cint): cint {.cdecl.}): cint {.
         cdecl.}
 
-  fts5_api* {.importc, bycopy.} = object
+  fts5_api* {.importc, impsqlite3Hdr, bycopy.} = object
     iVersion*: cint            ## ```
                   ##   Currently always set to 2 
                   ##      Create a new tokenizer
@@ -1431,7 +1432,7 @@ type
                                                                            ## ```
   
 var
-  sqlite3_temp_directory* {.importc.}: cstring ## ```
+  sqlite3_temp_directory* {.importc, impsqlite3Hdr.}: cstring ## ```
                                                           ##   * CAPI3REF: Name Of The Folder Holding Temporary Files
                                                           ##  *
                                                           ##  * ^(If this global variable is made to point to a string which is
@@ -1487,7 +1488,7 @@ var
                                                           ##  * sqlite3_temp_directory = sqlite3_mprintf("%s", zPathBuf);
                                                           ##  * </pre></blockquote>
                                                           ## ```
-  sqlite3_data_directory* {.importc.}: cstring ## ```
+  sqlite3_data_directory* {.importc, impsqlite3Hdr.}: cstring ## ```
                                                           ##   * CAPI3REF: Name Of The Folder Holding Database Files
                                                           ##  *
                                                           ##  * ^(If this global variable is made to point to a string which is
@@ -1522,14 +1523,15 @@ var
                                                           ##  * made NULL or made to point to memory obtained from [sqlite3_malloc]
                                                           ##  * or else the use of the [data_store_directory pragma] should be avoided.
                                                           ## ```
-proc libversion*(): cstring {.importc: "sqlite3_libversion", cdecl.}
-proc sourceid*(): cstring {.importc: "sqlite3_sourceid", cdecl.}
-proc libversion_number*(): cint {.importc: "sqlite3_libversion_number", cdecl.}
+proc libversion*(): cstring {.importc: "sqlite3_libversion", cdecl, impsqlite3Hdr.}
+proc sourceid*(): cstring {.importc: "sqlite3_sourceid", cdecl, impsqlite3Hdr.}
+proc libversion_number*(): cint {.importc: "sqlite3_libversion_number", cdecl,
+                               impsqlite3Hdr.}
 proc compileoption_used*(zOptName: cstring): cint {.
-    importc: "sqlite3_compileoption_used", cdecl.}
+    importc: "sqlite3_compileoption_used", cdecl, impsqlite3Hdr.}
 proc compileoption_get*(N: cint): cstring {.importc: "sqlite3_compileoption_get",
-                                        cdecl.}
-proc threadsafe*(): cint {.importc: "sqlite3_threadsafe", cdecl.}
+                                        cdecl, impsqlite3Hdr.}
+proc threadsafe*(): cint {.importc: "sqlite3_threadsafe", cdecl, impsqlite3Hdr.}
   ## ```
   ##   * CAPI3REF: Test To See If The Library Is Threadsafe
   ##  *
@@ -1566,7 +1568,7 @@ proc threadsafe*(): cint {.importc: "sqlite3_threadsafe", cdecl.}
   ##  *
   ##  * See the [threading mode] documentation for additional information.
   ## ```
-proc close*(a1: ptr sqlite3): cint {.importc: "sqlite3_close", cdecl.}
+proc close*(a1: ptr sqlite3): cint {.importc: "sqlite3_close", cdecl, impsqlite3Hdr.}
   ## ```
   ##   * If compiling for a processor that lacks floating point support,
   ##  * substitute integer for floating-point.
@@ -1613,10 +1615,11 @@ proc close*(a1: ptr sqlite3): cint {.importc: "sqlite3_close", cdecl.}
   ##  * ^Calling sqlite3_close() or sqlite3_close_v2() with a NULL pointer
   ##  * argument is a harmless no-op.
   ## ```
-proc close_v2*(a1: ptr sqlite3): cint {.importc: "sqlite3_close_v2", cdecl.}
+proc close_v2*(a1: ptr sqlite3): cint {.importc: "sqlite3_close_v2", cdecl,
+                                   impsqlite3Hdr.}
 proc exec*(a1: ptr sqlite3; sql: cstring; callback: proc (a1: pointer; a2: cint;
     a3: ptr cstring; a4: ptr cstring): cint {.cdecl.}; a7: pointer; errmsg: ptr cstring): cint {.
-    importc: "sqlite3_exec", cdecl.}
+    importc: "sqlite3_exec", cdecl, impsqlite3Hdr.}
   ## ```
   ##   * CAPI3REF: One-Step Query Execution Interface
   ##  * METHOD: sqlite3
@@ -1679,7 +1682,7 @@ proc exec*(a1: ptr sqlite3; sql: cstring; callback: proc (a1: pointer; a2: cint;
   ##  *      the 2nd parameter of sqlite3_exec() while sqlite3_exec() is running.
   ##  * </ul>
   ## ```
-proc initialize*(): cint {.importc: "sqlite3_initialize", cdecl.}
+proc initialize*(): cint {.importc: "sqlite3_initialize", cdecl, impsqlite3Hdr.}
   ## ```
   ##   * CAPI3REF: Initialize The SQLite Library
   ##  *
@@ -1755,10 +1758,10 @@ proc initialize*(): cint {.importc: "sqlite3_initialize", cdecl.}
   ##  * must return [SQLITE_OK] on success and some other [error code] upon
   ##  * failure.
   ## ```
-proc shutdown*(): cint {.importc: "sqlite3_shutdown", cdecl.}
-proc os_init*(): cint {.importc: "sqlite3_os_init", cdecl.}
-proc os_end*(): cint {.importc: "sqlite3_os_end", cdecl.}
-proc config*(a1: cint): cint {.importc: "sqlite3_config", cdecl, varargs.}
+proc shutdown*(): cint {.importc: "sqlite3_shutdown", cdecl, impsqlite3Hdr.}
+proc os_init*(): cint {.importc: "sqlite3_os_init", cdecl, impsqlite3Hdr.}
+proc os_end*(): cint {.importc: "sqlite3_os_end", cdecl, impsqlite3Hdr.}
+proc config*(a1: cint): cint {.importc: "sqlite3_config", cdecl, impsqlite3Hdr, varargs.}
   ## ```
   ##   * CAPI3REF: Configuring The SQLite Library
   ##  *
@@ -1790,7 +1793,8 @@ proc config*(a1: cint): cint {.importc: "sqlite3_config", cdecl, varargs.}
   ##  * ^If the option is unknown or SQLite is unable to set the option
   ##  * then this routine returns a non-zero [error code].
   ## ```
-proc db_config*(a1: ptr sqlite3; op: cint): cint {.importc: "sqlite3_db_config", cdecl, varargs.}
+proc db_config*(a1: ptr sqlite3; op: cint): cint {.importc: "sqlite3_db_config", cdecl,
+    impsqlite3Hdr, varargs.}
   ## ```
   ##   * CAPI3REF: Configure database connections
   ##  * METHOD: sqlite3
@@ -1809,7 +1813,7 @@ proc db_config*(a1: ptr sqlite3; op: cint): cint {.importc: "sqlite3_db_config",
   ##  * the call is considered successful.
   ## ```
 proc extended_result_codes*(a1: ptr sqlite3; onoff: cint): cint {.
-    importc: "sqlite3_extended_result_codes", cdecl.}
+    importc: "sqlite3_extended_result_codes", cdecl, impsqlite3Hdr.}
   ## ```
   ##   * CAPI3REF: Enable Or Disable Extended Result Codes
   ##  * METHOD: sqlite3
@@ -1819,7 +1823,7 @@ proc extended_result_codes*(a1: ptr sqlite3; onoff: cint): cint {.
   ##  * codes are disabled by default for historical compatibility.
   ## ```
 proc last_insert_rowid*(a1: ptr sqlite3): sqlite3_int64 {.
-    importc: "sqlite3_last_insert_rowid", cdecl.}
+    importc: "sqlite3_last_insert_rowid", cdecl, impsqlite3Hdr.}
   ## ```
   ##   * CAPI3REF: Last Insert Rowid
   ##  * METHOD: sqlite3
@@ -1881,7 +1885,7 @@ proc last_insert_rowid*(a1: ptr sqlite3): sqlite3_int64 {.
   ##  * last insert [rowid].
   ## ```
 proc set_last_insert_rowid*(a1: ptr sqlite3; a2: sqlite3_int64) {.
-    importc: "sqlite3_set_last_insert_rowid", cdecl.}
+    importc: "sqlite3_set_last_insert_rowid", cdecl, impsqlite3Hdr.}
   ## ```
   ##   * CAPI3REF: Set the Last Insert Rowid value.
   ##  * METHOD: sqlite3
@@ -1890,7 +1894,7 @@ proc set_last_insert_rowid*(a1: ptr sqlite3; a2: sqlite3_int64) {.
   ##  * set the value returned by calling sqlite3_last_insert_rowid(D) to R 
   ##  * without inserting a row into the database.
   ## ```
-proc changes*(a1: ptr sqlite3): cint {.importc: "sqlite3_changes", cdecl.}
+proc changes*(a1: ptr sqlite3): cint {.importc: "sqlite3_changes", cdecl, impsqlite3Hdr.}
   ## ```
   ##   * CAPI3REF: Count The Number Of Rows Modified
   ##  * METHOD: sqlite3
@@ -1947,7 +1951,8 @@ proc changes*(a1: ptr sqlite3): cint {.importc: "sqlite3_changes", cdecl.}
   ##  * <li> the [data_version pragma]
   ##  * </ul>
   ## ```
-proc total_changes*(a1: ptr sqlite3): cint {.importc: "sqlite3_total_changes", cdecl.}
+proc total_changes*(a1: ptr sqlite3): cint {.importc: "sqlite3_total_changes", cdecl,
+                                        impsqlite3Hdr.}
   ## ```
   ##   * CAPI3REF: Total Number Of Rows Modified
   ##  * METHOD: sqlite3
@@ -1983,7 +1988,7 @@ proc total_changes*(a1: ptr sqlite3): cint {.importc: "sqlite3_total_changes", c
   ##  * <li> the [SQLITE_FCNTL_DATA_VERSION] [file control]
   ##  * </ul>
   ## ```
-proc interrupt*(a1: ptr sqlite3) {.importc: "sqlite3_interrupt", cdecl.}
+proc interrupt*(a1: ptr sqlite3) {.importc: "sqlite3_interrupt", cdecl, impsqlite3Hdr.}
   ## ```
   ##   * CAPI3REF: Interrupt A Long-Running Query
   ##  * METHOD: sqlite3
@@ -2019,7 +2024,7 @@ proc interrupt*(a1: ptr sqlite3) {.importc: "sqlite3_interrupt", cdecl.}
   ##  * SQL statements is a no-op and has no effect on SQL statements
   ##  * that are started after the sqlite3_interrupt() call returns.
   ## ```
-proc complete*(sql: cstring): cint {.importc: "sqlite3_complete", cdecl.}
+proc complete*(sql: cstring): cint {.importc: "sqlite3_complete", cdecl, impsqlite3Hdr.}
   ## ```
   ##   * CAPI3REF: Determine If An SQL Statement Is Complete
   ##  *
@@ -2053,9 +2058,11 @@ proc complete*(sql: cstring): cint {.importc: "sqlite3_complete", cdecl.}
   ##  * The input to [sqlite3_complete16()] must be a zero-terminated
   ##  * UTF-16 string in native byte order.
   ## ```
-proc complete16*(sql: pointer): cint {.importc: "sqlite3_complete16", cdecl.}
+proc complete16*(sql: pointer): cint {.importc: "sqlite3_complete16", cdecl,
+                                   impsqlite3Hdr.}
 proc busy_handler*(a1: ptr sqlite3; a2: proc (a1: pointer; a2: cint): cint {.cdecl.};
-                  a3: pointer): cint {.importc: "sqlite3_busy_handler", cdecl.}
+                  a3: pointer): cint {.importc: "sqlite3_busy_handler", cdecl,
+                                    impsqlite3Hdr.}
   ## ```
   ##   * CAPI3REF: Register A Callback To Handle SQLITE_BUSY Errors
   ##  * KEYWORDS: {busy-handler callback} {busy handler}
@@ -2116,7 +2123,7 @@ proc busy_handler*(a1: ptr sqlite3; a2: proc (a1: pointer; a2: cint): cint {.cde
   ##  * or [prepared statement] that invoked the busy handler.
   ## ```
 proc busy_timeout*(a1: ptr sqlite3; ms: cint): cint {.importc: "sqlite3_busy_timeout",
-    cdecl.}
+    cdecl, impsqlite3Hdr.}
   ## ```
   ##   * CAPI3REF: Set A Busy Timeout
   ##  * METHOD: sqlite3
@@ -2140,7 +2147,7 @@ proc busy_timeout*(a1: ptr sqlite3; ms: cint): cint {.importc: "sqlite3_busy_tim
   ## ```
 proc get_table*(db: ptr sqlite3; zSql: cstring; pazResult: ptr ptr cstring;
                pnRow: ptr cint; pnColumn: ptr cint; pzErrmsg: ptr cstring): cint {.
-    importc: "sqlite3_get_table", cdecl.}
+    importc: "sqlite3_get_table", cdecl, impsqlite3Hdr.}
   ## ```
   ##   * CAPI3REF: Convenience Routines For Running Queries
   ##  * METHOD: sqlite3
@@ -2214,8 +2221,9 @@ proc get_table*(db: ptr sqlite3; zSql: cstring; pazResult: ptr ptr cstring;
   ##  * reflected in subsequent calls to [sqlite3_errcode()] or
   ##  * [sqlite3_errmsg()].
   ## ```
-proc free_table*(result: ptr cstring) {.importc: "sqlite3_free_table", cdecl.}
-proc mprintf*(a1: cstring): cstring {.importc: "sqlite3_mprintf", cdecl,
+proc free_table*(result: ptr cstring) {.importc: "sqlite3_free_table", cdecl,
+                                    impsqlite3Hdr.}
+proc mprintf*(a1: cstring): cstring {.importc: "sqlite3_mprintf", cdecl, impsqlite3Hdr,
                                   varargs.}
   ## ```
   ##   * CAPI3REF: Formatted String Printing Functions
@@ -2258,8 +2266,8 @@ proc mprintf*(a1: cstring): cstring {.importc: "sqlite3_mprintf", cdecl,
   ##  * See also:  [built-in printf()], [printf() SQL function]
   ## ```
 proc snprintf*(a1: cint; a2: cstring; a3: cstring): cstring {.
-    importc: "sqlite3_snprintf", cdecl, varargs.}
-proc malloc*(a1: cint): pointer {.importc: "sqlite3_malloc", cdecl.}
+    importc: "sqlite3_snprintf", cdecl, impsqlite3Hdr, varargs.}
+proc malloc*(a1: cint): pointer {.importc: "sqlite3_malloc", cdecl, impsqlite3Hdr.}
   ## ```
   ##   * CAPI3REF: Memory Allocation Subsystem
   ##  *
@@ -2335,13 +2343,17 @@ proc malloc*(a1: cint): pointer {.importc: "sqlite3_malloc", cdecl.}
   ##  * a block of memory after it has been released using
   ##  * [sqlite3_free()] or [sqlite3_realloc()].
   ## ```
-proc malloc64*(a1: sqlite3_uint64): pointer {.importc: "sqlite3_malloc64", cdecl.}
-proc realloc*(a1: pointer; a2: cint): pointer {.importc: "sqlite3_realloc", cdecl.}
+proc malloc64*(a1: sqlite3_uint64): pointer {.importc: "sqlite3_malloc64", cdecl,
+    impsqlite3Hdr.}
+proc realloc*(a1: pointer; a2: cint): pointer {.importc: "sqlite3_realloc", cdecl,
+    impsqlite3Hdr.}
 proc realloc64*(a1: pointer; a2: sqlite3_uint64): pointer {.
-    importc: "sqlite3_realloc64", cdecl.}
-proc free*(a1: pointer) {.importc: "sqlite3_free", cdecl.}
-proc msize*(a1: pointer): sqlite3_uint64 {.importc: "sqlite3_msize", cdecl.}
-proc memory_used*(): sqlite3_int64 {.importc: "sqlite3_memory_used", cdecl.}
+    importc: "sqlite3_realloc64", cdecl, impsqlite3Hdr.}
+proc free*(a1: pointer) {.importc: "sqlite3_free", cdecl, impsqlite3Hdr.}
+proc msize*(a1: pointer): sqlite3_uint64 {.importc: "sqlite3_msize", cdecl,
+                                       impsqlite3Hdr.}
+proc memory_used*(): sqlite3_int64 {.importc: "sqlite3_memory_used", cdecl,
+                                  impsqlite3Hdr.}
   ## ```
   ##   * CAPI3REF: Memory Allocator Statistics
   ##  *
@@ -2366,8 +2378,9 @@ proc memory_used*(): sqlite3_int64 {.importc: "sqlite3_memory_used", cdecl.}
   ##  * prior to the reset.
   ## ```
 proc memory_highwater*(resetFlag: cint): sqlite3_int64 {.
-    importc: "sqlite3_memory_highwater", cdecl.}
-proc randomness*(N: cint; P: pointer) {.importc: "sqlite3_randomness", cdecl.}
+    importc: "sqlite3_memory_highwater", cdecl, impsqlite3Hdr.}
+proc randomness*(N: cint; P: pointer) {.importc: "sqlite3_randomness", cdecl,
+                                   impsqlite3Hdr.}
   ## ```
   ##   * CAPI3REF: Pseudo-Random Number Generator
   ##  *
@@ -2391,7 +2404,7 @@ proc randomness*(N: cint; P: pointer) {.importc: "sqlite3_randomness", cdecl.}
   ## ```
 proc set_authorizer*(a1: ptr sqlite3; xAuth: proc (a1: pointer; a2: cint; a3: cstring;
     a4: cstring; a5: cstring; a6: cstring): cint {.cdecl.}; pUserData: pointer): cint {.
-    importc: "sqlite3_set_authorizer", cdecl.}
+    importc: "sqlite3_set_authorizer", cdecl, impsqlite3Hdr.}
   ## ```
   ##   * CAPI3REF: Compile-Time Authorization Callbacks
   ##  * METHOD: sqlite3
@@ -2482,7 +2495,7 @@ proc set_authorizer*(a1: ptr sqlite3; xAuth: proc (a1: pointer; a2: cint; a3: cs
   ##  * sqlite3_prepare_v2() to reprepare a statement after a schema change.
   ## ```
 proc trace*(a1: ptr sqlite3; xTrace: proc (a1: pointer; a2: cstring) {.cdecl.}; a3: pointer): pointer {.
-    importc: "sqlite3_trace", cdecl.}
+    importc: "sqlite3_trace", cdecl, impsqlite3Hdr.}
   ## ```
   ##   * CAPI3REF: Tracing And Profiling Functions
   ##  * METHOD: sqlite3
@@ -2517,10 +2530,10 @@ proc trace*(a1: ptr sqlite3; xTrace: proc (a1: pointer; a2: cstring) {.cdecl.}; 
   ## ```
 proc profile*(a1: ptr sqlite3; xProfile: proc (a1: pointer; a2: cstring;
     a3: sqlite3_uint64) {.cdecl.}; a3: pointer): pointer {.importc: "sqlite3_profile",
-    cdecl.}
+    cdecl, impsqlite3Hdr.}
 proc trace_v2*(a1: ptr sqlite3; uMask: cuint; xCallback: proc (a1: cuint; a2: pointer;
     a3: pointer; a4: pointer): cint {.cdecl.}; pCtx: pointer): cint {.
-    importc: "sqlite3_trace_v2", cdecl.}
+    importc: "sqlite3_trace_v2", cdecl, impsqlite3Hdr.}
   ## ```
   ##   * CAPI3REF: SQL Trace Hook
   ##  * METHOD: sqlite3
@@ -2552,7 +2565,7 @@ proc trace_v2*(a1: ptr sqlite3; uMask: cuint; xCallback: proc (a1: cuint; a2: po
   ## ```
 proc progress_handler*(a1: ptr sqlite3; a2: cint;
                       a3: proc (a1: pointer): cint {.cdecl.}; a4: pointer) {.
-    importc: "sqlite3_progress_handler", cdecl.}
+    importc: "sqlite3_progress_handler", cdecl, impsqlite3Hdr.}
   ## ```
   ##   * CAPI3REF: Query Progress Callbacks
   ##  * METHOD: sqlite3
@@ -2586,7 +2599,7 @@ proc progress_handler*(a1: ptr sqlite3; a2: cint;
   ##  *
   ## ```
 proc open*(filename: cstring; ppDb: ptr ptr sqlite3): cint {.importc: "sqlite3_open",
-    cdecl.}
+    cdecl, impsqlite3Hdr.}
   ## ```
   ##   * CAPI3REF: Opening A New Database Connection
   ##  * CONSTRUCTOR: sqlite3
@@ -2841,11 +2854,11 @@ proc open*(filename: cstring; ppDb: ptr ptr sqlite3): cint {.importc: "sqlite3_o
   ##  * See also: [sqlite3_temp_directory]
   ## ```
 proc open16*(filename: pointer; ppDb: ptr ptr sqlite3): cint {.
-    importc: "sqlite3_open16", cdecl.}
+    importc: "sqlite3_open16", cdecl, impsqlite3Hdr.}
 proc open_v2*(filename: cstring; ppDb: ptr ptr sqlite3; flags: cint; zVfs: cstring): cint {.
-    importc: "sqlite3_open_v2", cdecl.}
+    importc: "sqlite3_open_v2", cdecl, impsqlite3Hdr.}
 proc uri_parameter*(zFilename: cstring; zParam: cstring): cstring {.
-    importc: "sqlite3_uri_parameter", cdecl.}
+    importc: "sqlite3_uri_parameter", cdecl, impsqlite3Hdr.}
   ## ```
   ##   * CAPI3REF: Obtain Values For URI Parameters
   ##  *
@@ -2902,12 +2915,13 @@ proc uri_parameter*(zFilename: cstring; zParam: cstring): cstring {.
   ##  * See the [URI filename] documentation for additional information.
   ## ```
 proc uri_boolean*(zFile: cstring; zParam: cstring; bDefault: cint): cint {.
-    importc: "sqlite3_uri_boolean", cdecl.}
+    importc: "sqlite3_uri_boolean", cdecl, impsqlite3Hdr.}
 proc uri_int64*(a1: cstring; a2: cstring; a3: sqlite3_int64): sqlite3_int64 {.
-    importc: "sqlite3_uri_int64", cdecl.}
-proc uri_key*(zFilename: cstring; N: cint): cstring {.importc: "sqlite3_uri_key", cdecl.}
+    importc: "sqlite3_uri_int64", cdecl, impsqlite3Hdr.}
+proc uri_key*(zFilename: cstring; N: cint): cstring {.importc: "sqlite3_uri_key", cdecl,
+    impsqlite3Hdr.}
 proc filename_database*(a1: cstring): cstring {.
-    importc: "sqlite3_filename_database", cdecl.}
+    importc: "sqlite3_filename_database", cdecl, impsqlite3Hdr.}
   ## ```
   ##   * CAPI3REF:  Translate filenames
   ##  *
@@ -2936,9 +2950,10 @@ proc filename_database*(a1: cstring): cstring {.
   ##  * undefined and is likely a memory access violation.
   ## ```
 proc filename_journal*(a1: cstring): cstring {.importc: "sqlite3_filename_journal",
-    cdecl.}
-proc filename_wal*(a1: cstring): cstring {.importc: "sqlite3_filename_wal", cdecl.}
-proc errcode*(db: ptr sqlite3): cint {.importc: "sqlite3_errcode", cdecl.}
+    cdecl, impsqlite3Hdr.}
+proc filename_wal*(a1: cstring): cstring {.importc: "sqlite3_filename_wal", cdecl,
+                                       impsqlite3Hdr.}
+proc errcode*(db: ptr sqlite3): cint {.importc: "sqlite3_errcode", cdecl, impsqlite3Hdr.}
   ## ```
   ##   * CAPI3REF: Error Codes And Messages
   ##  * METHOD: sqlite3
@@ -2992,12 +3007,13 @@ proc errcode*(db: ptr sqlite3): cint {.importc: "sqlite3_errcode", cdecl.}
   ##  * error code and message may or may not be set.
   ## ```
 proc extended_errcode*(db: ptr sqlite3): cint {.importc: "sqlite3_extended_errcode",
-    cdecl.}
-proc errmsg*(a1: ptr sqlite3): cstring {.importc: "sqlite3_errmsg", cdecl.}
-proc errmsg16*(a1: ptr sqlite3): pointer {.importc: "sqlite3_errmsg16", cdecl.}
-proc errstr*(a1: cint): cstring {.importc: "sqlite3_errstr", cdecl.}
+    cdecl, impsqlite3Hdr.}
+proc errmsg*(a1: ptr sqlite3): cstring {.importc: "sqlite3_errmsg", cdecl, impsqlite3Hdr.}
+proc errmsg16*(a1: ptr sqlite3): pointer {.importc: "sqlite3_errmsg16", cdecl,
+                                      impsqlite3Hdr.}
+proc errstr*(a1: cint): cstring {.importc: "sqlite3_errstr", cdecl, impsqlite3Hdr.}
 proc limit*(a1: ptr sqlite3; id: cint; newVal: cint): cint {.importc: "sqlite3_limit",
-    cdecl.}
+    cdecl, impsqlite3Hdr.}
   ## ```
   ##   * CAPI3REF: Run-time Limits
   ##  * METHOD: sqlite3
@@ -3039,7 +3055,8 @@ proc limit*(a1: ptr sqlite3; id: cint; newVal: cint): cint {.importc: "sqlite3_l
   ##  * New run-time limit categories may be added in future releases.
   ## ```
 proc prepare*(db: ptr sqlite3; zSql: cstring; nByte: cint; ppStmt: ptr ptr sqlite3_stmt;
-             pzTail: ptr cstring): cint {.importc: "sqlite3_prepare", cdecl.}
+             pzTail: ptr cstring): cint {.importc: "sqlite3_prepare", cdecl,
+                                      impsqlite3Hdr.}
   ## ```
   ##   * CAPI3REF: Compiling An SQL Statement
   ##  * KEYWORDS: {SQL statement compiler}
@@ -3142,20 +3159,21 @@ proc prepare*(db: ptr sqlite3; zSql: cstring; nByte: cint; ppStmt: ptr ptr sqlit
   ## ```
 proc prepare_v2*(db: ptr sqlite3; zSql: cstring; nByte: cint;
                 ppStmt: ptr ptr sqlite3_stmt; pzTail: ptr cstring): cint {.
-    importc: "sqlite3_prepare_v2", cdecl.}
+    importc: "sqlite3_prepare_v2", cdecl, impsqlite3Hdr.}
 proc prepare_v3*(db: ptr sqlite3; zSql: cstring; nByte: cint; prepFlags: cuint;
                 ppStmt: ptr ptr sqlite3_stmt; pzTail: ptr cstring): cint {.
-    importc: "sqlite3_prepare_v3", cdecl.}
+    importc: "sqlite3_prepare_v3", cdecl, impsqlite3Hdr.}
 proc prepare16*(db: ptr sqlite3; zSql: pointer; nByte: cint;
                ppStmt: ptr ptr sqlite3_stmt; pzTail: ptr pointer): cint {.
-    importc: "sqlite3_prepare16", cdecl.}
+    importc: "sqlite3_prepare16", cdecl, impsqlite3Hdr.}
 proc prepare16_v2*(db: ptr sqlite3; zSql: pointer; nByte: cint;
                   ppStmt: ptr ptr sqlite3_stmt; pzTail: ptr pointer): cint {.
-    importc: "sqlite3_prepare16_v2", cdecl.}
+    importc: "sqlite3_prepare16_v2", cdecl, impsqlite3Hdr.}
 proc prepare16_v3*(db: ptr sqlite3; zSql: pointer; nByte: cint; prepFlags: cuint;
                   ppStmt: ptr ptr sqlite3_stmt; pzTail: ptr pointer): cint {.
-    importc: "sqlite3_prepare16_v3", cdecl.}
-proc sql*(pStmt: ptr sqlite3_stmt): cstring {.importc: "sqlite3_sql", cdecl.}
+    importc: "sqlite3_prepare16_v3", cdecl, impsqlite3Hdr.}
+proc sql*(pStmt: ptr sqlite3_stmt): cstring {.importc: "sqlite3_sql", cdecl,
+    impsqlite3Hdr.}
   ## ```
   ##   * CAPI3REF: Retrieving Statement SQL
   ##  * METHOD: sqlite3_stmt
@@ -3195,11 +3213,11 @@ proc sql*(pStmt: ptr sqlite3_stmt): cstring {.importc: "sqlite3_sql", cdecl.}
   ##  * by passing it to [sqlite3_free()].
   ## ```
 proc expanded_sql*(pStmt: ptr sqlite3_stmt): cstring {.
-    importc: "sqlite3_expanded_sql", cdecl.}
+    importc: "sqlite3_expanded_sql", cdecl, impsqlite3Hdr.}
 proc normalized_sql*(pStmt: ptr sqlite3_stmt): cstring {.
-    importc: "sqlite3_normalized_sql", cdecl.}
+    importc: "sqlite3_normalized_sql", cdecl, impsqlite3Hdr.}
 proc stmt_readonly*(pStmt: ptr sqlite3_stmt): cint {.
-    importc: "sqlite3_stmt_readonly", cdecl.}
+    importc: "sqlite3_stmt_readonly", cdecl, impsqlite3Hdr.}
   ## ```
   ##   * CAPI3REF: Determine If An SQL Statement Writes The Database
   ##  * METHOD: sqlite3_stmt
@@ -3235,7 +3253,7 @@ proc stmt_readonly*(pStmt: ptr sqlite3_stmt): cint {.
   ##  * sqlite3_stmt_readonly() returns false for those commands.
   ## ```
 proc stmt_isexplain*(pStmt: ptr sqlite3_stmt): cint {.
-    importc: "sqlite3_stmt_isexplain", cdecl.}
+    importc: "sqlite3_stmt_isexplain", cdecl, impsqlite3Hdr.}
   ## ```
   ##   * CAPI3REF: Query The EXPLAIN Setting For A Prepared Statement
   ##  * METHOD: sqlite3_stmt
@@ -3246,7 +3264,8 @@ proc stmt_isexplain*(pStmt: ptr sqlite3_stmt): cint {.
   ##  * ^The sqlite3_stmt_isexplain(S) interface returns 0 if S is
   ##  * an ordinary statement or a NULL pointer.
   ## ```
-proc stmt_busy*(a1: ptr sqlite3_stmt): cint {.importc: "sqlite3_stmt_busy", cdecl.}
+proc stmt_busy*(a1: ptr sqlite3_stmt): cint {.importc: "sqlite3_stmt_busy", cdecl,
+    impsqlite3Hdr.}
   ## ```
   ##   * CAPI3REF: Determine If A Prepared Statement Has Been Reset
   ##  * METHOD: sqlite3_stmt
@@ -3268,7 +3287,7 @@ proc stmt_busy*(a1: ptr sqlite3_stmt): cint {.importc: "sqlite3_stmt_busy", cdec
   ## ```
 proc bind_blob*(a1: ptr sqlite3_stmt; a2: cint; a3: pointer; n: cint;
                a5: proc (a1: pointer) {.cdecl.}): cint {.importc: "sqlite3_bind_blob",
-    cdecl.}
+    cdecl, impsqlite3Hdr.}
   ## ```
   ##   * CAPI3REF: Binding Values To Prepared Statements
   ##  * KEYWORDS: {host parameter} {host parameters} {host parameter name}
@@ -3389,35 +3408,35 @@ proc bind_blob*(a1: ptr sqlite3_stmt; a2: cint; a3: pointer; n: cint;
   ## ```
 proc bind_blob64*(a1: ptr sqlite3_stmt; a2: cint; a3: pointer; a4: sqlite3_uint64;
                  a5: proc (a1: pointer) {.cdecl.}): cint {.
-    importc: "sqlite3_bind_blob64", cdecl.}
+    importc: "sqlite3_bind_blob64", cdecl, impsqlite3Hdr.}
 proc bind_double*(a1: ptr sqlite3_stmt; a2: cint; a3: cdouble): cint {.
-    importc: "sqlite3_bind_double", cdecl.}
+    importc: "sqlite3_bind_double", cdecl, impsqlite3Hdr.}
 proc bind_int*(a1: ptr sqlite3_stmt; a2: cint; a3: cint): cint {.
-    importc: "sqlite3_bind_int", cdecl.}
+    importc: "sqlite3_bind_int", cdecl, impsqlite3Hdr.}
 proc bind_int64*(a1: ptr sqlite3_stmt; a2: cint; a3: sqlite3_int64): cint {.
-    importc: "sqlite3_bind_int64", cdecl.}
+    importc: "sqlite3_bind_int64", cdecl, impsqlite3Hdr.}
 proc bind_null*(a1: ptr sqlite3_stmt; a2: cint): cint {.importc: "sqlite3_bind_null",
-    cdecl.}
+    cdecl, impsqlite3Hdr.}
 proc bind_text*(a1: ptr sqlite3_stmt; a2: cint; a3: cstring; a4: cint;
                a5: proc (a1: pointer) {.cdecl.}): cint {.importc: "sqlite3_bind_text",
-    cdecl.}
+    cdecl, impsqlite3Hdr.}
 proc bind_text16*(a1: ptr sqlite3_stmt; a2: cint; a3: pointer; a4: cint;
                  a5: proc (a1: pointer) {.cdecl.}): cint {.
-    importc: "sqlite3_bind_text16", cdecl.}
+    importc: "sqlite3_bind_text16", cdecl, impsqlite3Hdr.}
 proc bind_text64*(a1: ptr sqlite3_stmt; a2: cint; a3: cstring; a4: sqlite3_uint64;
                  a5: proc (a1: pointer) {.cdecl.}; encoding: cuchar): cint {.
-    importc: "sqlite3_bind_text64", cdecl.}
+    importc: "sqlite3_bind_text64", cdecl, impsqlite3Hdr.}
 proc bind_value*(a1: ptr sqlite3_stmt; a2: cint; a3: ptr sqlite3_value): cint {.
-    importc: "sqlite3_bind_value", cdecl.}
+    importc: "sqlite3_bind_value", cdecl, impsqlite3Hdr.}
 proc bind_pointer*(a1: ptr sqlite3_stmt; a2: cint; a3: pointer; a4: cstring;
                   a5: proc (a1: pointer) {.cdecl.}): cint {.
-    importc: "sqlite3_bind_pointer", cdecl.}
+    importc: "sqlite3_bind_pointer", cdecl, impsqlite3Hdr.}
 proc bind_zeroblob*(a1: ptr sqlite3_stmt; a2: cint; n: cint): cint {.
-    importc: "sqlite3_bind_zeroblob", cdecl.}
+    importc: "sqlite3_bind_zeroblob", cdecl, impsqlite3Hdr.}
 proc bind_zeroblob64*(a1: ptr sqlite3_stmt; a2: cint; a3: sqlite3_uint64): cint {.
-    importc: "sqlite3_bind_zeroblob64", cdecl.}
+    importc: "sqlite3_bind_zeroblob64", cdecl, impsqlite3Hdr.}
 proc bind_parameter_count*(a1: ptr sqlite3_stmt): cint {.
-    importc: "sqlite3_bind_parameter_count", cdecl.}
+    importc: "sqlite3_bind_parameter_count", cdecl, impsqlite3Hdr.}
   ## ```
   ##   * CAPI3REF: Number Of SQL Parameters
   ##  * METHOD: sqlite3_stmt
@@ -3438,7 +3457,7 @@ proc bind_parameter_count*(a1: ptr sqlite3_stmt): cint {.
   ##  * [sqlite3_bind_parameter_index()].
   ## ```
 proc bind_parameter_name*(a1: ptr sqlite3_stmt; a2: cint): cstring {.
-    importc: "sqlite3_bind_parameter_name", cdecl.}
+    importc: "sqlite3_bind_parameter_name", cdecl, impsqlite3Hdr.}
   ## ```
   ##   * CAPI3REF: Name Of A Host Parameter
   ##  * METHOD: sqlite3_stmt
@@ -3466,7 +3485,7 @@ proc bind_parameter_name*(a1: ptr sqlite3_stmt; a2: cint): cstring {.
   ##  * [sqlite3_bind_parameter_index()].
   ## ```
 proc bind_parameter_index*(a1: ptr sqlite3_stmt; zName: cstring): cint {.
-    importc: "sqlite3_bind_parameter_index", cdecl.}
+    importc: "sqlite3_bind_parameter_index", cdecl, impsqlite3Hdr.}
   ## ```
   ##   * CAPI3REF: Index Of A Parameter With A Given Name
   ##  * METHOD: sqlite3_stmt
@@ -3484,7 +3503,7 @@ proc bind_parameter_index*(a1: ptr sqlite3_stmt; zName: cstring): cint {.
   ##  * [sqlite3_bind_parameter_name()].
   ## ```
 proc clear_bindings*(a1: ptr sqlite3_stmt): cint {.importc: "sqlite3_clear_bindings",
-    cdecl.}
+    cdecl, impsqlite3Hdr.}
   ## ```
   ##   * CAPI3REF: Reset All Bindings On A Prepared Statement
   ##  * METHOD: sqlite3_stmt
@@ -3494,7 +3513,7 @@ proc clear_bindings*(a1: ptr sqlite3_stmt): cint {.importc: "sqlite3_clear_bindi
   ##  * ^Use this routine to reset all host parameters to NULL.
   ## ```
 proc column_count*(pStmt: ptr sqlite3_stmt): cint {.importc: "sqlite3_column_count",
-    cdecl.}
+    cdecl, impsqlite3Hdr.}
   ## ```
   ##   * CAPI3REF: Number Of Columns In A Result Set
   ##  * METHOD: sqlite3_stmt
@@ -3510,7 +3529,7 @@ proc column_count*(pStmt: ptr sqlite3_stmt): cint {.importc: "sqlite3_column_cou
   ##  * See also: [sqlite3_data_count()]
   ## ```
 proc column_name*(a1: ptr sqlite3_stmt; N: cint): cstring {.
-    importc: "sqlite3_column_name", cdecl.}
+    importc: "sqlite3_column_name", cdecl, impsqlite3Hdr.}
   ## ```
   ##   * CAPI3REF: Column Names In A Result Set
   ##  * METHOD: sqlite3_stmt
@@ -3539,9 +3558,9 @@ proc column_name*(a1: ptr sqlite3_stmt; N: cint): cstring {.
   ##  * one release of SQLite to the next.
   ## ```
 proc column_name16*(a1: ptr sqlite3_stmt; N: cint): pointer {.
-    importc: "sqlite3_column_name16", cdecl.}
+    importc: "sqlite3_column_name16", cdecl, impsqlite3Hdr.}
 proc column_database_name*(a1: ptr sqlite3_stmt; a2: cint): cstring {.
-    importc: "sqlite3_column_database_name", cdecl.}
+    importc: "sqlite3_column_database_name", cdecl, impsqlite3Hdr.}
   ## ```
   ##   * CAPI3REF: Source Of Data In A Query Result
   ##  * METHOD: sqlite3_stmt
@@ -3585,17 +3604,17 @@ proc column_database_name*(a1: ptr sqlite3_stmt; a2: cint): cstring {.
   ##  * at the same time then the results are undefined.
   ## ```
 proc column_database_name16*(a1: ptr sqlite3_stmt; a2: cint): pointer {.
-    importc: "sqlite3_column_database_name16", cdecl.}
+    importc: "sqlite3_column_database_name16", cdecl, impsqlite3Hdr.}
 proc column_table_name*(a1: ptr sqlite3_stmt; a2: cint): cstring {.
-    importc: "sqlite3_column_table_name", cdecl.}
+    importc: "sqlite3_column_table_name", cdecl, impsqlite3Hdr.}
 proc column_table_name16*(a1: ptr sqlite3_stmt; a2: cint): pointer {.
-    importc: "sqlite3_column_table_name16", cdecl.}
+    importc: "sqlite3_column_table_name16", cdecl, impsqlite3Hdr.}
 proc column_origin_name*(a1: ptr sqlite3_stmt; a2: cint): cstring {.
-    importc: "sqlite3_column_origin_name", cdecl.}
+    importc: "sqlite3_column_origin_name", cdecl, impsqlite3Hdr.}
 proc column_origin_name16*(a1: ptr sqlite3_stmt; a2: cint): pointer {.
-    importc: "sqlite3_column_origin_name16", cdecl.}
+    importc: "sqlite3_column_origin_name16", cdecl, impsqlite3Hdr.}
 proc column_decltype*(a1: ptr sqlite3_stmt; a2: cint): cstring {.
-    importc: "sqlite3_column_decltype", cdecl.}
+    importc: "sqlite3_column_decltype", cdecl, impsqlite3Hdr.}
   ## ```
   ##   * CAPI3REF: Declared Datatype Of A Query Result
   ##  * METHOD: sqlite3_stmt
@@ -3627,8 +3646,8 @@ proc column_decltype*(a1: ptr sqlite3_stmt; a2: cint): cstring {.
   ##  * used to hold those values.
   ## ```
 proc column_decltype16*(a1: ptr sqlite3_stmt; a2: cint): pointer {.
-    importc: "sqlite3_column_decltype16", cdecl.}
-proc step*(a1: ptr sqlite3_stmt): cint {.importc: "sqlite3_step", cdecl.}
+    importc: "sqlite3_column_decltype16", cdecl, impsqlite3Hdr.}
+proc step*(a1: ptr sqlite3_stmt): cint {.importc: "sqlite3_step", cdecl, impsqlite3Hdr.}
   ## ```
   ##   * CAPI3REF: Evaluate An SQL Statement
   ##  * METHOD: sqlite3_stmt
@@ -3711,7 +3730,8 @@ proc step*(a1: ptr sqlite3_stmt): cint {.importc: "sqlite3_step", cdecl.}
   ##  * then the more specific [error codes] are returned directly
   ##  * by sqlite3_step().  The use of the "vX" interfaces is recommended.
   ## ```
-proc data_count*(pStmt: ptr sqlite3_stmt): cint {.importc: "sqlite3_data_count", cdecl.}
+proc data_count*(pStmt: ptr sqlite3_stmt): cint {.importc: "sqlite3_data_count", cdecl,
+    impsqlite3Hdr.}
   ## ```
   ##   * CAPI3REF: Number of columns in a result set
   ##  * METHOD: sqlite3_stmt
@@ -3732,7 +3752,7 @@ proc data_count*(pStmt: ptr sqlite3_stmt): cint {.importc: "sqlite3_data_count",
   ##  * See also: [sqlite3_column_count()]
   ## ```
 proc column_blob*(a1: ptr sqlite3_stmt; iCol: cint): pointer {.
-    importc: "sqlite3_column_blob", cdecl.}
+    importc: "sqlite3_column_blob", cdecl, impsqlite3Hdr.}
   ## ```
   ##   * CAPI3REF: Result Values From A Query
   ##  * KEYWORDS: {column access functions}
@@ -3943,24 +3963,25 @@ proc column_blob*(a1: ptr sqlite3_stmt; iCol: cint): pointer {.
   ##  * other SQLite interface is called on the same [database connection].
   ## ```
 proc column_double*(a1: ptr sqlite3_stmt; iCol: cint): cdouble {.
-    importc: "sqlite3_column_double", cdecl.}
+    importc: "sqlite3_column_double", cdecl, impsqlite3Hdr.}
 proc column_int*(a1: ptr sqlite3_stmt; iCol: cint): cint {.
-    importc: "sqlite3_column_int", cdecl.}
+    importc: "sqlite3_column_int", cdecl, impsqlite3Hdr.}
 proc column_int64*(a1: ptr sqlite3_stmt; iCol: cint): sqlite3_int64 {.
-    importc: "sqlite3_column_int64", cdecl.}
+    importc: "sqlite3_column_int64", cdecl, impsqlite3Hdr.}
 proc column_text*(a1: ptr sqlite3_stmt; iCol: cint): ptr cuchar {.
-    importc: "sqlite3_column_text", cdecl.}
+    importc: "sqlite3_column_text", cdecl, impsqlite3Hdr.}
 proc column_text16*(a1: ptr sqlite3_stmt; iCol: cint): pointer {.
-    importc: "sqlite3_column_text16", cdecl.}
+    importc: "sqlite3_column_text16", cdecl, impsqlite3Hdr.}
 proc column_value*(a1: ptr sqlite3_stmt; iCol: cint): ptr sqlite3_value {.
-    importc: "sqlite3_column_value", cdecl.}
+    importc: "sqlite3_column_value", cdecl, impsqlite3Hdr.}
 proc column_bytes*(a1: ptr sqlite3_stmt; iCol: cint): cint {.
-    importc: "sqlite3_column_bytes", cdecl.}
+    importc: "sqlite3_column_bytes", cdecl, impsqlite3Hdr.}
 proc column_bytes16*(a1: ptr sqlite3_stmt; iCol: cint): cint {.
-    importc: "sqlite3_column_bytes16", cdecl.}
+    importc: "sqlite3_column_bytes16", cdecl, impsqlite3Hdr.}
 proc column_type*(a1: ptr sqlite3_stmt; iCol: cint): cint {.
-    importc: "sqlite3_column_type", cdecl.}
-proc finalize*(pStmt: ptr sqlite3_stmt): cint {.importc: "sqlite3_finalize", cdecl.}
+    importc: "sqlite3_column_type", cdecl, impsqlite3Hdr.}
+proc finalize*(pStmt: ptr sqlite3_stmt): cint {.importc: "sqlite3_finalize", cdecl,
+    impsqlite3Hdr.}
   ## ```
   ##   * CAPI3REF: Destroy A Prepared Statement Object
   ##  * DESTRUCTOR: sqlite3_stmt
@@ -3987,7 +4008,8 @@ proc finalize*(pStmt: ptr sqlite3_stmt): cint {.importc: "sqlite3_finalize", cde
   ##  * statement after it has been finalized can result in undefined and
   ##  * undesirable behavior such as segfaults and heap corruption.
   ## ```
-proc reset*(pStmt: ptr sqlite3_stmt): cint {.importc: "sqlite3_reset", cdecl.}
+proc reset*(pStmt: ptr sqlite3_stmt): cint {.importc: "sqlite3_reset", cdecl,
+                                        impsqlite3Hdr.}
   ## ```
   ##   * CAPI3REF: Reset A Prepared Statement Object
   ##  * METHOD: sqlite3_stmt
@@ -4018,7 +4040,7 @@ proc create_function*(db: ptr sqlite3; zFunctionName: cstring; nArg: cint;
     a1: ptr sqlite3_context; a2: cint; a3: ptr ptr sqlite3_value) {.cdecl.}; xStep: proc (
     a1: ptr sqlite3_context; a2: cint; a3: ptr ptr sqlite3_value) {.cdecl.};
                      xFinal: proc (a1: ptr sqlite3_context) {.cdecl.}): cint {.
-    importc: "sqlite3_create_function", cdecl.}
+    importc: "sqlite3_create_function", cdecl, impsqlite3Hdr.}
   ## ```
   ##   * CAPI3REF: Create Or Redefine SQL Functions
   ##  * KEYWORDS: {function creation routines}
@@ -4149,14 +4171,14 @@ proc create_function16*(db: ptr sqlite3; zFunctionName: pointer; nArg: cint;
     a1: ptr sqlite3_context; a2: cint; a3: ptr ptr sqlite3_value) {.cdecl.}; xStep: proc (
     a1: ptr sqlite3_context; a2: cint; a3: ptr ptr sqlite3_value) {.cdecl.};
                        xFinal: proc (a1: ptr sqlite3_context) {.cdecl.}): cint {.
-    importc: "sqlite3_create_function16", cdecl.}
+    importc: "sqlite3_create_function16", cdecl, impsqlite3Hdr.}
 proc create_function_v2*(db: ptr sqlite3; zFunctionName: cstring; nArg: cint;
                         eTextRep: cint; pApp: pointer; xFunc: proc (
     a1: ptr sqlite3_context; a2: cint; a3: ptr ptr sqlite3_value) {.cdecl.}; xStep: proc (
     a1: ptr sqlite3_context; a2: cint; a3: ptr ptr sqlite3_value) {.cdecl.};
                         xFinal: proc (a1: ptr sqlite3_context) {.cdecl.};
                         xDestroy: proc (a1: pointer) {.cdecl.}): cint {.
-    importc: "sqlite3_create_function_v2", cdecl.}
+    importc: "sqlite3_create_function_v2", cdecl, impsqlite3Hdr.}
 proc create_window_function*(db: ptr sqlite3; zFunctionName: cstring; nArg: cint;
                             eTextRep: cint; pApp: pointer; xStep: proc (
     a1: ptr sqlite3_context; a2: cint; a3: ptr ptr sqlite3_value) {.cdecl.};
@@ -4164,19 +4186,20 @@ proc create_window_function*(db: ptr sqlite3; zFunctionName: cstring; nArg: cint
                             xValue: proc (a1: ptr sqlite3_context) {.cdecl.}; xInverse: proc (
     a1: ptr sqlite3_context; a2: cint; a3: ptr ptr sqlite3_value) {.cdecl.};
                             xDestroy: proc (a1: pointer) {.cdecl.}): cint {.
-    importc: "sqlite3_create_window_function", cdecl.}
+    importc: "sqlite3_create_window_function", cdecl, impsqlite3Hdr.}
 proc aggregate_count*(a1: ptr sqlite3_context): cint {.
-    importc: "sqlite3_aggregate_count", cdecl.}
-proc expired*(a1: ptr sqlite3_stmt): cint {.importc: "sqlite3_expired", cdecl.}
+    importc: "sqlite3_aggregate_count", cdecl, impsqlite3Hdr.}
+proc expired*(a1: ptr sqlite3_stmt): cint {.importc: "sqlite3_expired", cdecl,
+                                       impsqlite3Hdr.}
 proc transfer_bindings*(a1: ptr sqlite3_stmt; a2: ptr sqlite3_stmt): cint {.
-    importc: "sqlite3_transfer_bindings", cdecl.}
-proc global_recover*(): cint {.importc: "sqlite3_global_recover", cdecl.}
-proc thread_cleanup*() {.importc: "sqlite3_thread_cleanup", cdecl.}
+    importc: "sqlite3_transfer_bindings", cdecl, impsqlite3Hdr.}
+proc global_recover*(): cint {.importc: "sqlite3_global_recover", cdecl, impsqlite3Hdr.}
+proc thread_cleanup*() {.importc: "sqlite3_thread_cleanup", cdecl, impsqlite3Hdr.}
 proc memory_alarm*(a1: proc (a1: pointer; a2: sqlite3_int64; a3: cint) {.cdecl.};
                   a2: pointer; a3: sqlite3_int64): cint {.
-    importc: "sqlite3_memory_alarm", cdecl.}
+    importc: "sqlite3_memory_alarm", cdecl, impsqlite3Hdr.}
 proc value_blob*(a1: ptr sqlite3_value): pointer {.importc: "sqlite3_value_blob",
-    cdecl.}
+    cdecl, impsqlite3Hdr.}
   ## ```
   ##   * CAPI3REF: Obtaining SQL Values
   ##  * METHOD: sqlite3_value
@@ -4306,32 +4329,35 @@ proc value_blob*(a1: ptr sqlite3_value): pointer {.importc: "sqlite3_value_blob"
   ##  * other SQLite interface is called on the same [database connection].
   ## ```
 proc value_double*(a1: ptr sqlite3_value): cdouble {.importc: "sqlite3_value_double",
-    cdecl.}
-proc value_int*(a1: ptr sqlite3_value): cint {.importc: "sqlite3_value_int", cdecl.}
+    cdecl, impsqlite3Hdr.}
+proc value_int*(a1: ptr sqlite3_value): cint {.importc: "sqlite3_value_int", cdecl,
+    impsqlite3Hdr.}
 proc value_int64*(a1: ptr sqlite3_value): sqlite3_int64 {.
-    importc: "sqlite3_value_int64", cdecl.}
+    importc: "sqlite3_value_int64", cdecl, impsqlite3Hdr.}
 proc value_pointer*(a1: ptr sqlite3_value; a2: cstring): pointer {.
-    importc: "sqlite3_value_pointer", cdecl.}
+    importc: "sqlite3_value_pointer", cdecl, impsqlite3Hdr.}
 proc value_text*(a1: ptr sqlite3_value): ptr cuchar {.importc: "sqlite3_value_text",
-    cdecl.}
+    cdecl, impsqlite3Hdr.}
 proc value_text16*(a1: ptr sqlite3_value): pointer {.importc: "sqlite3_value_text16",
-    cdecl.}
+    cdecl, impsqlite3Hdr.}
 proc value_text16le*(a1: ptr sqlite3_value): pointer {.
-    importc: "sqlite3_value_text16le", cdecl.}
+    importc: "sqlite3_value_text16le", cdecl, impsqlite3Hdr.}
 proc value_text16be*(a1: ptr sqlite3_value): pointer {.
-    importc: "sqlite3_value_text16be", cdecl.}
-proc value_bytes*(a1: ptr sqlite3_value): cint {.importc: "sqlite3_value_bytes", cdecl.}
+    importc: "sqlite3_value_text16be", cdecl, impsqlite3Hdr.}
+proc value_bytes*(a1: ptr sqlite3_value): cint {.importc: "sqlite3_value_bytes", cdecl,
+    impsqlite3Hdr.}
 proc value_bytes16*(a1: ptr sqlite3_value): cint {.importc: "sqlite3_value_bytes16",
-    cdecl.}
-proc value_type*(a1: ptr sqlite3_value): cint {.importc: "sqlite3_value_type", cdecl.}
+    cdecl, impsqlite3Hdr.}
+proc value_type*(a1: ptr sqlite3_value): cint {.importc: "sqlite3_value_type", cdecl,
+    impsqlite3Hdr.}
 proc value_numeric_type*(a1: ptr sqlite3_value): cint {.
-    importc: "sqlite3_value_numeric_type", cdecl.}
+    importc: "sqlite3_value_numeric_type", cdecl, impsqlite3Hdr.}
 proc value_nochange*(a1: ptr sqlite3_value): cint {.
-    importc: "sqlite3_value_nochange", cdecl.}
+    importc: "sqlite3_value_nochange", cdecl, impsqlite3Hdr.}
 proc value_frombind*(a1: ptr sqlite3_value): cint {.
-    importc: "sqlite3_value_frombind", cdecl.}
+    importc: "sqlite3_value_frombind", cdecl, impsqlite3Hdr.}
 proc value_subtype*(a1: ptr sqlite3_value): cuint {.importc: "sqlite3_value_subtype",
-    cdecl.}
+    cdecl, impsqlite3Hdr.}
   ## ```
   ##   * CAPI3REF: Finding The Subtype Of SQL Values
   ##  * METHOD: sqlite3_value
@@ -4343,7 +4369,7 @@ proc value_subtype*(a1: ptr sqlite3_value): cuint {.importc: "sqlite3_value_subt
   ##  * routine to set the subtype for the return value of an SQL function.
   ## ```
 proc value_dup*(a1: ptr sqlite3_value): ptr sqlite3_value {.
-    importc: "sqlite3_value_dup", cdecl.}
+    importc: "sqlite3_value_dup", cdecl, impsqlite3Hdr.}
   ## ```
   ##   * CAPI3REF: Copy And Free SQL Values
   ##  * METHOD: sqlite3_value
@@ -4358,9 +4384,10 @@ proc value_dup*(a1: ptr sqlite3_value): ptr sqlite3_value {.
   ##  * previously obtained from [sqlite3_value_dup()].  ^If V is a NULL pointer
   ##  * then sqlite3_value_free(V) is a harmless no-op.
   ## ```
-proc value_free*(a1: ptr sqlite3_value) {.importc: "sqlite3_value_free", cdecl.}
+proc value_free*(a1: ptr sqlite3_value) {.importc: "sqlite3_value_free", cdecl,
+                                      impsqlite3Hdr.}
 proc aggregate_context*(a1: ptr sqlite3_context; nBytes: cint): pointer {.
-    importc: "sqlite3_aggregate_context", cdecl.}
+    importc: "sqlite3_aggregate_context", cdecl, impsqlite3Hdr.}
   ## ```
   ##   * CAPI3REF: Obtain Aggregate Function Context
   ##  * METHOD: sqlite3_context
@@ -4405,7 +4432,7 @@ proc aggregate_context*(a1: ptr sqlite3_context; nBytes: cint): pointer {.
   ##  * the aggregate SQL function is running.
   ## ```
 proc user_data*(a1: ptr sqlite3_context): pointer {.importc: "sqlite3_user_data",
-    cdecl.}
+    cdecl, impsqlite3Hdr.}
   ## ```
   ##   * CAPI3REF: User Data For Functions
   ##  * METHOD: sqlite3_context
@@ -4420,7 +4447,7 @@ proc user_data*(a1: ptr sqlite3_context): pointer {.importc: "sqlite3_user_data"
   ##  * the application-defined function is running.
   ## ```
 proc context_db_handle*(a1: ptr sqlite3_context): ptr sqlite3 {.
-    importc: "sqlite3_context_db_handle", cdecl.}
+    importc: "sqlite3_context_db_handle", cdecl, impsqlite3Hdr.}
   ## ```
   ##   * CAPI3REF: Database Connection For Functions
   ##  * METHOD: sqlite3_context
@@ -4432,7 +4459,7 @@ proc context_db_handle*(a1: ptr sqlite3_context): ptr sqlite3 {.
   ##  * registered the application defined function.
   ## ```
 proc get_auxdata*(a1: ptr sqlite3_context; N: cint): pointer {.
-    importc: "sqlite3_get_auxdata", cdecl.}
+    importc: "sqlite3_get_auxdata", cdecl, impsqlite3Hdr.}
   ## ```
   ##   * CAPI3REF: Function Auxiliary Data
   ##  * METHOD: sqlite3_context
@@ -4492,10 +4519,10 @@ proc get_auxdata*(a1: ptr sqlite3_context; N: cint): pointer {.
   ## ```
 proc set_auxdata*(a1: ptr sqlite3_context; N: cint; a3: pointer;
                  a4: proc (a1: pointer) {.cdecl.}) {.importc: "sqlite3_set_auxdata",
-    cdecl.}
+    cdecl, impsqlite3Hdr.}
 proc result_blob*(a1: ptr sqlite3_context; a2: pointer; a3: cint;
                  a4: proc (a1: pointer) {.cdecl.}) {.importc: "sqlite3_result_blob",
-    cdecl.}
+    cdecl, impsqlite3Hdr.}
   ## ```
   ##   * CAPI3REF: Setting The Result Of An SQL Function
   ##  * METHOD: sqlite3_context
@@ -4624,50 +4651,51 @@ proc result_blob*(a1: ptr sqlite3_context; a2: pointer; a3: cint;
   ## ```
 proc result_blob64*(a1: ptr sqlite3_context; a2: pointer; a3: sqlite3_uint64;
                    a4: proc (a1: pointer) {.cdecl.}) {.
-    importc: "sqlite3_result_blob64", cdecl.}
+    importc: "sqlite3_result_blob64", cdecl, impsqlite3Hdr.}
 proc result_double*(a1: ptr sqlite3_context; a2: cdouble) {.
-    importc: "sqlite3_result_double", cdecl.}
+    importc: "sqlite3_result_double", cdecl, impsqlite3Hdr.}
 proc result_error*(a1: ptr sqlite3_context; a2: cstring; a3: cint) {.
-    importc: "sqlite3_result_error", cdecl.}
+    importc: "sqlite3_result_error", cdecl, impsqlite3Hdr.}
 proc result_error16*(a1: ptr sqlite3_context; a2: pointer; a3: cint) {.
-    importc: "sqlite3_result_error16", cdecl.}
+    importc: "sqlite3_result_error16", cdecl, impsqlite3Hdr.}
 proc result_error_toobig*(a1: ptr sqlite3_context) {.
-    importc: "sqlite3_result_error_toobig", cdecl.}
+    importc: "sqlite3_result_error_toobig", cdecl, impsqlite3Hdr.}
 proc result_error_nomem*(a1: ptr sqlite3_context) {.
-    importc: "sqlite3_result_error_nomem", cdecl.}
+    importc: "sqlite3_result_error_nomem", cdecl, impsqlite3Hdr.}
 proc result_error_code*(a1: ptr sqlite3_context; a2: cint) {.
-    importc: "sqlite3_result_error_code", cdecl.}
+    importc: "sqlite3_result_error_code", cdecl, impsqlite3Hdr.}
 proc result_int*(a1: ptr sqlite3_context; a2: cint) {.importc: "sqlite3_result_int",
-    cdecl.}
+    cdecl, impsqlite3Hdr.}
 proc result_int64*(a1: ptr sqlite3_context; a2: sqlite3_int64) {.
-    importc: "sqlite3_result_int64", cdecl.}
-proc result_null*(a1: ptr sqlite3_context) {.importc: "sqlite3_result_null", cdecl.}
+    importc: "sqlite3_result_int64", cdecl, impsqlite3Hdr.}
+proc result_null*(a1: ptr sqlite3_context) {.importc: "sqlite3_result_null", cdecl,
+    impsqlite3Hdr.}
 proc result_text*(a1: ptr sqlite3_context; a2: cstring; a3: cint;
                  a4: proc (a1: pointer) {.cdecl.}) {.importc: "sqlite3_result_text",
-    cdecl.}
+    cdecl, impsqlite3Hdr.}
 proc result_text64*(a1: ptr sqlite3_context; a2: cstring; a3: sqlite3_uint64;
                    a4: proc (a1: pointer) {.cdecl.}; encoding: cuchar) {.
-    importc: "sqlite3_result_text64", cdecl.}
+    importc: "sqlite3_result_text64", cdecl, impsqlite3Hdr.}
 proc result_text16*(a1: ptr sqlite3_context; a2: pointer; a3: cint;
                    a4: proc (a1: pointer) {.cdecl.}) {.
-    importc: "sqlite3_result_text16", cdecl.}
+    importc: "sqlite3_result_text16", cdecl, impsqlite3Hdr.}
 proc result_text16le*(a1: ptr sqlite3_context; a2: pointer; a3: cint;
                      a4: proc (a1: pointer) {.cdecl.}) {.
-    importc: "sqlite3_result_text16le", cdecl.}
+    importc: "sqlite3_result_text16le", cdecl, impsqlite3Hdr.}
 proc result_text16be*(a1: ptr sqlite3_context; a2: pointer; a3: cint;
                      a4: proc (a1: pointer) {.cdecl.}) {.
-    importc: "sqlite3_result_text16be", cdecl.}
+    importc: "sqlite3_result_text16be", cdecl, impsqlite3Hdr.}
 proc result_value*(a1: ptr sqlite3_context; a2: ptr sqlite3_value) {.
-    importc: "sqlite3_result_value", cdecl.}
+    importc: "sqlite3_result_value", cdecl, impsqlite3Hdr.}
 proc result_pointer*(a1: ptr sqlite3_context; a2: pointer; a3: cstring;
                     a4: proc (a1: pointer) {.cdecl.}) {.
-    importc: "sqlite3_result_pointer", cdecl.}
+    importc: "sqlite3_result_pointer", cdecl, impsqlite3Hdr.}
 proc result_zeroblob*(a1: ptr sqlite3_context; n: cint) {.
-    importc: "sqlite3_result_zeroblob", cdecl.}
+    importc: "sqlite3_result_zeroblob", cdecl, impsqlite3Hdr.}
 proc result_zeroblob64*(a1: ptr sqlite3_context; n: sqlite3_uint64): cint {.
-    importc: "sqlite3_result_zeroblob64", cdecl.}
+    importc: "sqlite3_result_zeroblob64", cdecl, impsqlite3Hdr.}
 proc result_subtype*(a1: ptr sqlite3_context; a2: cuint) {.
-    importc: "sqlite3_result_subtype", cdecl.}
+    importc: "sqlite3_result_subtype", cdecl, impsqlite3Hdr.}
   ## ```
   ##   * CAPI3REF: Setting The Subtype Of An SQL Function
   ##  * METHOD: sqlite3_context
@@ -4682,7 +4710,7 @@ proc result_subtype*(a1: ptr sqlite3_context; a2: cuint) {.
   ## ```
 proc create_collation*(a1: ptr sqlite3; zName: cstring; eTextRep: cint; pArg: pointer;
     xCompare: proc (a1: pointer; a2: cint; a3: pointer; a4: cint; a5: pointer): cint {.cdecl.}): cint {.
-    importc: "sqlite3_create_collation", cdecl.}
+    importc: "sqlite3_create_collation", cdecl, impsqlite3Hdr.}
   ## ```
   ##   * CAPI3REF: Define New Collating Sequences
   ##  * METHOD: sqlite3
@@ -4768,13 +4796,13 @@ proc create_collation_v2*(a1: ptr sqlite3; zName: cstring; eTextRep: cint;
                          pArg: pointer; xCompare: proc (a1: pointer; a2: cint;
     a3: pointer; a4: cint; a5: pointer): cint {.cdecl.};
                          xDestroy: proc (a1: pointer) {.cdecl.}): cint {.
-    importc: "sqlite3_create_collation_v2", cdecl.}
+    importc: "sqlite3_create_collation_v2", cdecl, impsqlite3Hdr.}
 proc create_collation16*(a1: ptr sqlite3; zName: pointer; eTextRep: cint; pArg: pointer;
     xCompare: proc (a1: pointer; a2: cint; a3: pointer; a4: cint; a5: pointer): cint {.cdecl.}): cint {.
-    importc: "sqlite3_create_collation16", cdecl.}
+    importc: "sqlite3_create_collation16", cdecl, impsqlite3Hdr.}
 proc collation_needed*(a1: ptr sqlite3; a2: pointer; a3: proc (a1: pointer;
     a2: ptr sqlite3; eTextRep: cint; a4: cstring) {.cdecl.}): cint {.
-    importc: "sqlite3_collation_needed", cdecl.}
+    importc: "sqlite3_collation_needed", cdecl, impsqlite3Hdr.}
   ## ```
   ##   * CAPI3REF: Collation Needed Callbacks
   ##  * METHOD: sqlite3
@@ -4804,9 +4832,9 @@ proc collation_needed*(a1: ptr sqlite3; a2: pointer; a3: proc (a1: pointer;
   ## ```
 proc collation_needed16*(a1: ptr sqlite3; a2: pointer; a3: proc (a1: pointer;
     a2: ptr sqlite3; eTextRep: cint; a4: pointer) {.cdecl.}): cint {.
-    importc: "sqlite3_collation_needed16", cdecl.}
+    importc: "sqlite3_collation_needed16", cdecl, impsqlite3Hdr.}
 proc key*(db: ptr sqlite3; pKey: pointer; nKey: cint): cint {.importc: "sqlite3_key",
-    cdecl.}
+    cdecl, impsqlite3Hdr.}
   ## ```
   ##   * Specify the key for an encrypted database.  This routine should be
   ##  * called right after sqlite3_open().
@@ -4815,9 +4843,9 @@ proc key*(db: ptr sqlite3; pKey: pointer; nKey: cint): cint {.importc: "sqlite3_
   ##  * of SQLite.
   ## ```
 proc key_v2*(db: ptr sqlite3; zDbName: cstring; pKey: pointer; nKey: cint): cint {.
-    importc: "sqlite3_key_v2", cdecl.}
+    importc: "sqlite3_key_v2", cdecl, impsqlite3Hdr.}
 proc rekey*(db: ptr sqlite3; pKey: pointer; nKey: cint): cint {.importc: "sqlite3_rekey",
-    cdecl.}
+    cdecl, impsqlite3Hdr.}
   ## ```
   ##   * Change the key on an open database.  If the current database is not
   ##  * encrypted, this routine will encrypt it.  If pNew==0 or nNew==0, the
@@ -4843,13 +4871,14 @@ proc rekey*(db: ptr sqlite3; pKey: pointer; nKey: cint): cint {.importc: "sqlite
   ##      END SQLCIPHER
   ## ```
 proc rekey_v2*(db: ptr sqlite3; zDbName: cstring; pKey: pointer; nKey: cint): cint {.
-    importc: "sqlite3_rekey_v2", cdecl.}
-proc activate_see*(zPassPhrase: cstring) {.importc: "sqlite3_activate_see", cdecl.}
+    importc: "sqlite3_rekey_v2", cdecl, impsqlite3Hdr.}
+proc activate_see*(zPassPhrase: cstring) {.importc: "sqlite3_activate_see", cdecl,
+                                        impsqlite3Hdr.}
   ## ```
   ##   * Specify the activation key for a SEE database.  Unless 
   ##  * activated, none of the SEE routines will work.
   ## ```
-proc sleep*(a1: cint): cint {.importc: "sqlite3_sleep", cdecl.}
+proc sleep*(a1: cint): cint {.importc: "sqlite3_sleep", cdecl, impsqlite3Hdr.}
   ## ```
   ##   * CAPI3REF: Suspend Execution For A Short Time
   ##  *
@@ -4868,7 +4897,7 @@ proc sleep*(a1: cint): cint {.importc: "sqlite3_sleep", cdecl.}
   ##  * in the previous paragraphs.
   ## ```
 proc win32_set_directory*(`type`: culong; zValue: pointer): cint {.
-    importc: "sqlite3_win32_set_directory", cdecl.}
+    importc: "sqlite3_win32_set_directory", cdecl, impsqlite3Hdr.}
   ## ```
   ##   * CAPI3REF: Win32 Specific Interface
   ##  *
@@ -4889,10 +4918,11 @@ proc win32_set_directory*(`type`: culong; zValue: pointer): cint {.
   ##  * UTF-8 or UTF-16, respectively.
   ## ```
 proc win32_set_directory8*(`type`: culong; zValue: cstring): cint {.
-    importc: "sqlite3_win32_set_directory8", cdecl.}
+    importc: "sqlite3_win32_set_directory8", cdecl, impsqlite3Hdr.}
 proc win32_set_directory16*(`type`: culong; zValue: pointer): cint {.
-    importc: "sqlite3_win32_set_directory16", cdecl.}
-proc get_autocommit*(a1: ptr sqlite3): cint {.importc: "sqlite3_get_autocommit", cdecl.}
+    importc: "sqlite3_win32_set_directory16", cdecl, impsqlite3Hdr.}
+proc get_autocommit*(a1: ptr sqlite3): cint {.importc: "sqlite3_get_autocommit", cdecl,
+    impsqlite3Hdr.}
   ## ```
   ##   * CAPI3REF: Test For Auto-Commit Mode
   ##  * KEYWORDS: {autocommit mode}
@@ -4916,7 +4946,7 @@ proc get_autocommit*(a1: ptr sqlite3): cint {.importc: "sqlite3_get_autocommit",
   ##  * is undefined.
   ## ```
 proc db_handle*(a1: ptr sqlite3_stmt): ptr sqlite3 {.importc: "sqlite3_db_handle",
-    cdecl.}
+    cdecl, impsqlite3Hdr.}
   ## ```
   ##   * CAPI3REF: Find The Database Handle Of A Prepared Statement
   ##  * METHOD: sqlite3_stmt
@@ -4929,7 +4959,7 @@ proc db_handle*(a1: ptr sqlite3_stmt): ptr sqlite3 {.importc: "sqlite3_db_handle
   ##  * create the statement in the first place.
   ## ```
 proc db_filename*(db: ptr sqlite3; zDbName: cstring): cstring {.
-    importc: "sqlite3_db_filename", cdecl.}
+    importc: "sqlite3_db_filename", cdecl, impsqlite3Hdr.}
   ## ```
   ##   * CAPI3REF: Return The Filename For A Database Connection
   ##  * METHOD: sqlite3
@@ -4961,7 +4991,7 @@ proc db_filename*(db: ptr sqlite3; zDbName: cstring): cstring {.
   ##  * </ul>
   ## ```
 proc db_readonly*(db: ptr sqlite3; zDbName: cstring): cint {.
-    importc: "sqlite3_db_readonly", cdecl.}
+    importc: "sqlite3_db_readonly", cdecl, impsqlite3Hdr.}
   ## ```
   ##   * CAPI3REF: Determine if a database is read-only
   ##  * METHOD: sqlite3
@@ -4971,7 +5001,7 @@ proc db_readonly*(db: ptr sqlite3; zDbName: cstring): cint {.
   ##  * the name of a database on connection D.
   ## ```
 proc next_stmt*(pDb: ptr sqlite3; pStmt: ptr sqlite3_stmt): ptr sqlite3_stmt {.
-    importc: "sqlite3_next_stmt", cdecl.}
+    importc: "sqlite3_next_stmt", cdecl, impsqlite3Hdr.}
   ## ```
   ##   * CAPI3REF: Find the next prepared statement
   ##  * METHOD: sqlite3
@@ -4987,7 +5017,7 @@ proc next_stmt*(pDb: ptr sqlite3; pStmt: ptr sqlite3_stmt): ptr sqlite3_stmt {.
   ##  * connection and in particular must not be a NULL pointer.
   ## ```
 proc commit_hook*(a1: ptr sqlite3; a2: proc (a1: pointer): cint {.cdecl.}; a3: pointer): pointer {.
-    importc: "sqlite3_commit_hook", cdecl.}
+    importc: "sqlite3_commit_hook", cdecl, impsqlite3Hdr.}
   ## ```
   ##   * CAPI3REF: Commit And Rollback Notification Callbacks
   ##  * METHOD: sqlite3
@@ -5036,10 +5066,11 @@ proc commit_hook*(a1: ptr sqlite3; a2: proc (a1: pointer): cint {.cdecl.}; a3: p
   ##  * See also the [sqlite3_update_hook()] interface.
   ## ```
 proc rollback_hook*(a1: ptr sqlite3; a2: proc (a1: pointer) {.cdecl.}; a3: pointer): pointer {.
-    importc: "sqlite3_rollback_hook", cdecl.}
+    importc: "sqlite3_rollback_hook", cdecl, impsqlite3Hdr.}
 proc update_hook*(a1: ptr sqlite3; a2: proc (a1: pointer; a2: cint; a3: cstring;
                                        a4: cstring; a5: sqlite3_int64) {.cdecl.};
-                 a3: pointer): pointer {.importc: "sqlite3_update_hook", cdecl.}
+                 a3: pointer): pointer {.importc: "sqlite3_update_hook", cdecl,
+                                      impsqlite3Hdr.}
   ## ```
   ##   * CAPI3REF: Data Change Notification Callbacks
   ##  * METHOD: sqlite3
@@ -5090,7 +5121,7 @@ proc update_hook*(a1: ptr sqlite3; a2: proc (a1: pointer; a2: cint; a3: cstring;
   ##  * and [sqlite3_preupdate_hook()] interfaces.
   ## ```
 proc enable_shared_cache*(a1: cint): cint {.importc: "sqlite3_enable_shared_cache",
-                                        cdecl.}
+                                        cdecl, impsqlite3Hdr.}
   ## ```
   ##   * CAPI3REF: Enable Or Disable Shared Pager Cache
   ##  *
@@ -5130,7 +5161,8 @@ proc enable_shared_cache*(a1: cint): cint {.importc: "sqlite3_enable_shared_cach
   ##  *
   ##  * See Also:  [SQLite Shared-Cache Mode]
   ## ```
-proc release_memory*(a1: cint): cint {.importc: "sqlite3_release_memory", cdecl.}
+proc release_memory*(a1: cint): cint {.importc: "sqlite3_release_memory", cdecl,
+                                   impsqlite3Hdr.}
   ## ```
   ##   * CAPI3REF: Attempt To Free Heap Memory
   ##  *
@@ -5146,7 +5178,7 @@ proc release_memory*(a1: cint): cint {.importc: "sqlite3_release_memory", cdecl.
   ##  * See also: [sqlite3_db_release_memory()]
   ## ```
 proc db_release_memory*(a1: ptr sqlite3): cint {.
-    importc: "sqlite3_db_release_memory", cdecl.}
+    importc: "sqlite3_db_release_memory", cdecl, impsqlite3Hdr.}
   ## ```
   ##   * CAPI3REF: Free Memory Used By A Database Connection
   ##  * METHOD: sqlite3
@@ -5160,7 +5192,7 @@ proc db_release_memory*(a1: ptr sqlite3): cint {.
   ##  * See also: [sqlite3_release_memory()]
   ## ```
 proc soft_heap_limit64*(N: sqlite3_int64): sqlite3_int64 {.
-    importc: "sqlite3_soft_heap_limit64", cdecl.}
+    importc: "sqlite3_soft_heap_limit64", cdecl, impsqlite3Hdr.}
   ## ```
   ##   * CAPI3REF: Impose A Limit On Heap Size
   ##  *
@@ -5226,8 +5258,9 @@ proc soft_heap_limit64*(N: sqlite3_int64): sqlite3_int64 {.
   ##  * changes in future releases of SQLite.
   ## ```
 proc hard_heap_limit64*(N: sqlite3_int64): sqlite3_int64 {.
-    importc: "sqlite3_hard_heap_limit64", cdecl.}
-proc soft_heap_limit*(N: cint) {.importc: "sqlite3_soft_heap_limit", cdecl.}
+    importc: "sqlite3_hard_heap_limit64", cdecl, impsqlite3Hdr.}
+proc soft_heap_limit*(N: cint) {.importc: "sqlite3_soft_heap_limit", cdecl,
+                              impsqlite3Hdr.}
   ## ```
   ##   * CAPI3REF: Deprecated Soft Heap Limit Interface
   ##  * DEPRECATED
@@ -5241,7 +5274,7 @@ proc table_column_metadata*(db: ptr sqlite3; zDbName: cstring; zTableName: cstri
                            zColumnName: cstring; pzDataType: ptr cstring;
                            pzCollSeq: ptr cstring; pNotNull: ptr cint;
                            pPrimaryKey: ptr cint; pAutoinc: ptr cint): cint {.
-    importc: "sqlite3_table_column_metadata", cdecl.}
+    importc: "sqlite3_table_column_metadata", cdecl, impsqlite3Hdr.}
   ## ```
   ##   * CAPI3REF: Extract Metadata About A Column Of A Table
   ##  * METHOD: sqlite3
@@ -5313,7 +5346,7 @@ proc table_column_metadata*(db: ptr sqlite3; zDbName: cstring; zTableName: cstri
   ## ```
 proc load_extension*(db: ptr sqlite3; zFile: cstring; zProc: cstring;
                     pzErrMsg: ptr cstring): cint {.
-    importc: "sqlite3_load_extension", cdecl.}
+    importc: "sqlite3_load_extension", cdecl, impsqlite3Hdr.}
   ## ```
   ##   * CAPI3REF: Load An Extension
   ##  * METHOD: sqlite3
@@ -5359,7 +5392,7 @@ proc load_extension*(db: ptr sqlite3; zFile: cstring; zProc: cstring;
   ##  * See also the [load_extension() SQL function].
   ## ```
 proc enable_load_extension*(db: ptr sqlite3; onoff: cint): cint {.
-    importc: "sqlite3_enable_load_extension", cdecl.}
+    importc: "sqlite3_enable_load_extension", cdecl, impsqlite3Hdr.}
   ## ```
   ##   * CAPI3REF: Enable Or Disable Extension Loading
   ##  * METHOD: sqlite3
@@ -5386,7 +5419,7 @@ proc enable_load_extension*(db: ptr sqlite3; onoff: cint): cint {.
   ##  * access to extension loading capabilities.
   ## ```
 proc auto_extension*(xEntryPoint: proc () {.cdecl.}): cint {.
-    importc: "sqlite3_auto_extension", cdecl.}
+    importc: "sqlite3_auto_extension", cdecl, impsqlite3Hdr.}
   ## ```
   ##   * CAPI3REF: Automatically Load Statically Linked Extensions
   ##  *
@@ -5424,7 +5457,7 @@ proc auto_extension*(xEntryPoint: proc () {.cdecl.}): cint {.
   ##  * and [sqlite3_cancel_auto_extension()]
   ## ```
 proc cancel_auto_extension*(xEntryPoint: proc () {.cdecl.}): cint {.
-    importc: "sqlite3_cancel_auto_extension", cdecl.}
+    importc: "sqlite3_cancel_auto_extension", cdecl, impsqlite3Hdr.}
   ## ```
   ##   * CAPI3REF: Cancel Automatic Extension Loading
   ##  *
@@ -5435,7 +5468,8 @@ proc cancel_auto_extension*(xEntryPoint: proc () {.cdecl.}): cint {.
   ##  * unregistered and it returns 0 if X was not on the list of initialization
   ##  * routines.
   ## ```
-proc reset_auto_extension*() {.importc: "sqlite3_reset_auto_extension", cdecl.}
+proc reset_auto_extension*() {.importc: "sqlite3_reset_auto_extension", cdecl,
+                             impsqlite3Hdr.}
   ## ```
   ##   * CAPI3REF: Reset Automatic Extension Loading
   ##  *
@@ -5444,7 +5478,7 @@ proc reset_auto_extension*() {.importc: "sqlite3_reset_auto_extension", cdecl.}
   ## ```
 proc create_module*(db: ptr sqlite3; zName: cstring; p: ptr sqlite3_module;
                    pClientData: pointer): cint {.importc: "sqlite3_create_module",
-    cdecl.}
+    cdecl, impsqlite3Hdr.}
   ## ```
   ##   * CAPI3REF: Register A Virtual Table Implementation
   ##  * METHOD: sqlite3
@@ -5479,9 +5513,9 @@ proc create_module*(db: ptr sqlite3; zName: cstring; p: ptr sqlite3_module;
   ## ```
 proc create_module_v2*(db: ptr sqlite3; zName: cstring; p: ptr sqlite3_module;
                       pClientData: pointer; xDestroy: proc (a1: pointer) {.cdecl.}): cint {.
-    importc: "sqlite3_create_module_v2", cdecl.}
+    importc: "sqlite3_create_module_v2", cdecl, impsqlite3Hdr.}
 proc drop_modules*(db: ptr sqlite3; azKeep: ptr cstring): cint {.
-    importc: "sqlite3_drop_modules", cdecl.}
+    importc: "sqlite3_drop_modules", cdecl, impsqlite3Hdr.}
   ## ```
   ##   * CAPI3REF: Remove Unnecessary Virtual Table Implementations
   ##  * METHOD: sqlite3
@@ -5495,7 +5529,7 @@ proc drop_modules*(db: ptr sqlite3; azKeep: ptr cstring): cint {.
   ##  * See also: [sqlite3_create_module()]
   ## ```
 proc declare_vtab*(a1: ptr sqlite3; zSQL: cstring): cint {.
-    importc: "sqlite3_declare_vtab", cdecl.}
+    importc: "sqlite3_declare_vtab", cdecl, impsqlite3Hdr.}
   ## ```
   ##   * CAPI3REF: Declare The Schema Of A Virtual Table
   ##  *
@@ -5505,7 +5539,7 @@ proc declare_vtab*(a1: ptr sqlite3; zSQL: cstring): cint {.
   ##  * the virtual tables they implement.
   ## ```
 proc overload_function*(a1: ptr sqlite3; zFuncName: cstring; nArg: cint): cint {.
-    importc: "sqlite3_overload_function", cdecl.}
+    importc: "sqlite3_overload_function", cdecl, impsqlite3Hdr.}
   ## ```
   ##   * CAPI3REF: Overload A Function For A Virtual Table
   ##  * METHOD: sqlite3
@@ -5525,7 +5559,7 @@ proc overload_function*(a1: ptr sqlite3; zFuncName: cstring; nArg: cint): cint {
   ## ```
 proc blob_open*(a1: ptr sqlite3; zDb: cstring; zTable: cstring; zColumn: cstring;
                iRow: sqlite3_int64; flags: cint; ppBlob: ptr ptr sqlite3_blob): cint {.
-    importc: "sqlite3_blob_open", cdecl.}
+    importc: "sqlite3_blob_open", cdecl, impsqlite3Hdr.}
   ## ```
   ##   * CAPI3REF: Open A BLOB For Incremental I/O
   ##  * METHOD: sqlite3
@@ -5610,7 +5644,7 @@ proc blob_open*(a1: ptr sqlite3; zDb: cstring; zTable: cstring; zColumn: cstring
   ##  * [sqlite3_blob_bytes()], [sqlite3_blob_write()].
   ## ```
 proc blob_reopen*(a1: ptr sqlite3_blob; a2: sqlite3_int64): cint {.
-    importc: "sqlite3_blob_reopen", cdecl.}
+    importc: "sqlite3_blob_reopen", cdecl, impsqlite3Hdr.}
   ## ```
   ##   * CAPI3REF: Move a BLOB Handle to a New Row
   ##  * METHOD: sqlite3_blob
@@ -5634,7 +5668,8 @@ proc blob_reopen*(a1: ptr sqlite3_blob; a2: sqlite3_int64): cint {.
   ##  *
   ##  * ^This function sets the database handle error code and message.
   ## ```
-proc blob_close*(a1: ptr sqlite3_blob): cint {.importc: "sqlite3_blob_close", cdecl.}
+proc blob_close*(a1: ptr sqlite3_blob): cint {.importc: "sqlite3_blob_close", cdecl,
+    impsqlite3Hdr.}
   ## ```
   ##   * CAPI3REF: Close A BLOB Handle
   ##  * DESTRUCTOR: sqlite3_blob
@@ -5656,7 +5691,8 @@ proc blob_close*(a1: ptr sqlite3_blob): cint {.importc: "sqlite3_blob_close", cd
   ##  * is passed a valid open blob handle, the values returned by the 
   ##  * sqlite3_errcode() and sqlite3_errmsg() functions are set before returning.
   ## ```
-proc blob_bytes*(a1: ptr sqlite3_blob): cint {.importc: "sqlite3_blob_bytes", cdecl.}
+proc blob_bytes*(a1: ptr sqlite3_blob): cint {.importc: "sqlite3_blob_bytes", cdecl,
+    impsqlite3Hdr.}
   ## ```
   ##   * CAPI3REF: Return The Size Of An Open BLOB
   ##  * METHOD: sqlite3_blob
@@ -5672,7 +5708,7 @@ proc blob_bytes*(a1: ptr sqlite3_blob): cint {.importc: "sqlite3_blob_bytes", cd
   ##  * to this routine results in undefined and probably undesirable behavior.
   ## ```
 proc blob_read*(a1: ptr sqlite3_blob; Z: pointer; N: cint; iOffset: cint): cint {.
-    importc: "sqlite3_blob_read", cdecl.}
+    importc: "sqlite3_blob_read", cdecl, impsqlite3Hdr.}
   ## ```
   ##   * CAPI3REF: Read Data From A BLOB Incrementally
   ##  * METHOD: sqlite3_blob
@@ -5701,7 +5737,7 @@ proc blob_read*(a1: ptr sqlite3_blob; Z: pointer; N: cint; iOffset: cint): cint 
   ##  * See also: [sqlite3_blob_write()].
   ## ```
 proc blob_write*(a1: ptr sqlite3_blob; z: pointer; n: cint; iOffset: cint): cint {.
-    importc: "sqlite3_blob_write", cdecl.}
+    importc: "sqlite3_blob_write", cdecl, impsqlite3Hdr.}
   ## ```
   ##   * CAPI3REF: Write Data Into A BLOB Incrementally
   ##  * METHOD: sqlite3_blob
@@ -5743,7 +5779,7 @@ proc blob_write*(a1: ptr sqlite3_blob; z: pointer; n: cint; iOffset: cint): cint
   ##  * See also: [sqlite3_blob_read()].
   ## ```
 proc vfs_find*(zVfsName: cstring): ptr sqlite3_vfs {.importc: "sqlite3_vfs_find",
-    cdecl.}
+    cdecl, impsqlite3Hdr.}
   ## ```
   ##   * CAPI3REF: Virtual File System Objects
   ##  *
@@ -5774,10 +5810,11 @@ proc vfs_find*(zVfsName: cstring): ptr sqlite3_vfs {.importc: "sqlite3_vfs_find"
   ##  * the default.  The choice for the new VFS is arbitrary.)^
   ## ```
 proc vfs_register*(a1: ptr sqlite3_vfs; makeDflt: cint): cint {.
-    importc: "sqlite3_vfs_register", cdecl.}
+    importc: "sqlite3_vfs_register", cdecl, impsqlite3Hdr.}
 proc vfs_unregister*(a1: ptr sqlite3_vfs): cint {.importc: "sqlite3_vfs_unregister",
-    cdecl.}
-proc mutex_alloc*(a1: cint): ptr sqlite3_mutex {.importc: "sqlite3_mutex_alloc", cdecl.}
+    cdecl, impsqlite3Hdr.}
+proc mutex_alloc*(a1: cint): ptr sqlite3_mutex {.importc: "sqlite3_mutex_alloc", cdecl,
+    impsqlite3Hdr.}
   ## ```
   ##   * CAPI3REF: Mutexes
   ##  *
@@ -5892,14 +5929,20 @@ proc mutex_alloc*(a1: cint): ptr sqlite3_mutex {.importc: "sqlite3_mutex_alloc",
   ##  *
   ##  * See also: [sqlite3_mutex_held()] and [sqlite3_mutex_notheld()].
   ## ```
-proc mutex_free*(a1: ptr sqlite3_mutex) {.importc: "sqlite3_mutex_free", cdecl.}
-proc mutex_enter*(a1: ptr sqlite3_mutex) {.importc: "sqlite3_mutex_enter", cdecl.}
-proc mutex_try*(a1: ptr sqlite3_mutex): cint {.importc: "sqlite3_mutex_try", cdecl.}
-proc mutex_leave*(a1: ptr sqlite3_mutex) {.importc: "sqlite3_mutex_leave", cdecl.}
-proc mutex_held*(a1: ptr sqlite3_mutex): cint {.importc: "sqlite3_mutex_held", cdecl.}
+proc mutex_free*(a1: ptr sqlite3_mutex) {.importc: "sqlite3_mutex_free", cdecl,
+                                      impsqlite3Hdr.}
+proc mutex_enter*(a1: ptr sqlite3_mutex) {.importc: "sqlite3_mutex_enter", cdecl,
+                                       impsqlite3Hdr.}
+proc mutex_try*(a1: ptr sqlite3_mutex): cint {.importc: "sqlite3_mutex_try", cdecl,
+    impsqlite3Hdr.}
+proc mutex_leave*(a1: ptr sqlite3_mutex) {.importc: "sqlite3_mutex_leave", cdecl,
+                                       impsqlite3Hdr.}
+proc mutex_held*(a1: ptr sqlite3_mutex): cint {.importc: "sqlite3_mutex_held", cdecl,
+    impsqlite3Hdr.}
 proc mutex_notheld*(a1: ptr sqlite3_mutex): cint {.importc: "sqlite3_mutex_notheld",
-    cdecl.}
-proc db_mutex*(a1: ptr sqlite3): ptr sqlite3_mutex {.importc: "sqlite3_db_mutex", cdecl.}
+    cdecl, impsqlite3Hdr.}
+proc db_mutex*(a1: ptr sqlite3): ptr sqlite3_mutex {.importc: "sqlite3_db_mutex", cdecl,
+    impsqlite3Hdr.}
   ## ```
   ##   * CAPI3REF: Retrieve the mutex for a database connection
   ##  * METHOD: sqlite3
@@ -5911,7 +5954,7 @@ proc db_mutex*(a1: ptr sqlite3): ptr sqlite3_mutex {.importc: "sqlite3_db_mutex"
   ##  * routine returns a NULL pointer.
   ## ```
 proc file_control*(a1: ptr sqlite3; zDbName: cstring; op: cint; a4: pointer): cint {.
-    importc: "sqlite3_file_control", cdecl.}
+    importc: "sqlite3_file_control", cdecl, impsqlite3Hdr.}
   ## ```
   ##   * CAPI3REF: Low-Level Control Of Database Files
   ##  * METHOD: sqlite3
@@ -5953,7 +5996,8 @@ proc file_control*(a1: ptr sqlite3; zDbName: cstring; op: cint; a4: pointer): ci
   ##  *
   ##  * See also: [file control opcodes]
   ## ```
-proc test_control*(op: cint): cint {.importc: "sqlite3_test_control", cdecl, varargs.}
+proc test_control*(op: cint): cint {.importc: "sqlite3_test_control", cdecl,
+                                 impsqlite3Hdr, varargs.}
   ## ```
   ##   * CAPI3REF: Testing Interface
   ##  *
@@ -5971,7 +6015,7 @@ proc test_control*(op: cint): cint {.importc: "sqlite3_test_control", cdecl, var
   ##  * Unlike most of the SQLite API, this function is not guaranteed to
   ##  * operate consistently from one release to the next.
   ## ```
-proc keyword_count*(): cint {.importc: "sqlite3_keyword_count", cdecl.}
+proc keyword_count*(): cint {.importc: "sqlite3_keyword_count", cdecl, impsqlite3Hdr.}
   ## ```
   ##   * CAPI3REF: SQL Keyword Checking
   ##  *
@@ -6020,10 +6064,11 @@ proc keyword_count*(): cint {.importc: "sqlite3_keyword_count", cdecl.}
   ##  * new keywords may be added to future releases of SQLite.
   ## ```
 proc keyword_name*(a1: cint; a2: ptr cstring; a3: ptr cint): cint {.
-    importc: "sqlite3_keyword_name", cdecl.}
+    importc: "sqlite3_keyword_name", cdecl, impsqlite3Hdr.}
 proc keyword_check*(a1: cstring; a2: cint): cint {.importc: "sqlite3_keyword_check",
-    cdecl.}
-proc str_new*(a1: ptr sqlite3): ptr sqlite3_str {.importc: "sqlite3_str_new", cdecl.}
+    cdecl, impsqlite3Hdr.}
+proc str_new*(a1: ptr sqlite3): ptr sqlite3_str {.importc: "sqlite3_str_new", cdecl,
+    impsqlite3Hdr.}
   ## ```
   ##   * CAPI3REF: Create A New Dynamic String Object
   ##  * CONSTRUCTOR: sqlite3_str
@@ -6049,7 +6094,8 @@ proc str_new*(a1: ptr sqlite3): ptr sqlite3_str {.importc: "sqlite3_str_new", cd
   ##  * the value set for [sqlite3_limit](D,[SQLITE_LIMIT_LENGTH]) instead
   ##  * of [SQLITE_MAX_LENGTH].
   ## ```
-proc str_finish*(a1: ptr sqlite3_str): cstring {.importc: "sqlite3_str_finish", cdecl.}
+proc str_finish*(a1: ptr sqlite3_str): cstring {.importc: "sqlite3_str_finish", cdecl,
+    impsqlite3Hdr.}
   ## ```
   ##   * CAPI3REF: Finalize A Dynamic String
   ##  * DESTRUCTOR: sqlite3_str
@@ -6064,7 +6110,7 @@ proc str_finish*(a1: ptr sqlite3_str): cstring {.importc: "sqlite3_str_finish", 
   ##  * string in [sqlite3_str] object X is zero bytes long.
   ## ```
 proc str_appendf*(a1: ptr sqlite3_str; zFormat: cstring) {.
-    importc: "sqlite3_str_appendf", cdecl, varargs.}
+    importc: "sqlite3_str_appendf", cdecl, impsqlite3Hdr, varargs.}
   ## ```
   ##   * CAPI3REF: Add Content To A Dynamic String
   ##  * METHOD: sqlite3_str
@@ -6098,13 +6144,15 @@ proc str_appendf*(a1: ptr sqlite3_str; zFormat: cstring) {.
   ##  * subsequent call to [sqlite3_str_errcode(X)].
   ## ```
 proc str_append*(a1: ptr sqlite3_str; zIn: cstring; N: cint) {.
-    importc: "sqlite3_str_append", cdecl.}
+    importc: "sqlite3_str_append", cdecl, impsqlite3Hdr.}
 proc str_appendall*(a1: ptr sqlite3_str; zIn: cstring) {.
-    importc: "sqlite3_str_appendall", cdecl.}
+    importc: "sqlite3_str_appendall", cdecl, impsqlite3Hdr.}
 proc str_appendchar*(a1: ptr sqlite3_str; N: cint; C: cchar) {.
-    importc: "sqlite3_str_appendchar", cdecl.}
-proc str_reset*(a1: ptr sqlite3_str) {.importc: "sqlite3_str_reset", cdecl.}
-proc str_errcode*(a1: ptr sqlite3_str): cint {.importc: "sqlite3_str_errcode", cdecl.}
+    importc: "sqlite3_str_appendchar", cdecl, impsqlite3Hdr.}
+proc str_reset*(a1: ptr sqlite3_str) {.importc: "sqlite3_str_reset", cdecl,
+                                   impsqlite3Hdr.}
+proc str_errcode*(a1: ptr sqlite3_str): cint {.importc: "sqlite3_str_errcode", cdecl,
+    impsqlite3Hdr.}
   ## ```
   ##   * CAPI3REF: Status Of A Dynamic String
   ##  * METHOD: sqlite3_str
@@ -6134,10 +6182,12 @@ proc str_errcode*(a1: ptr sqlite3_str): cint {.importc: "sqlite3_str_errcode", c
   ##  * outside the range of 0 to [sqlite3_str_length(X)] and do not read or
   ##  * write any byte after any subsequent sqlite3_str method call.
   ## ```
-proc str_length*(a1: ptr sqlite3_str): cint {.importc: "sqlite3_str_length", cdecl.}
-proc str_value*(a1: ptr sqlite3_str): cstring {.importc: "sqlite3_str_value", cdecl.}
+proc str_length*(a1: ptr sqlite3_str): cint {.importc: "sqlite3_str_length", cdecl,
+    impsqlite3Hdr.}
+proc str_value*(a1: ptr sqlite3_str): cstring {.importc: "sqlite3_str_value", cdecl,
+    impsqlite3Hdr.}
 proc status*(op: cint; pCurrent: ptr cint; pHighwater: ptr cint; resetFlag: cint): cint {.
-    importc: "sqlite3_status", cdecl.}
+    importc: "sqlite3_status", cdecl, impsqlite3Hdr.}
   ## ```
   ##   * CAPI3REF: SQLite Runtime Status
   ##  *
@@ -6165,9 +6215,10 @@ proc status*(op: cint; pCurrent: ptr cint; pHighwater: ptr cint; resetFlag: cint
   ##  * See also: [sqlite3_db_status()]
   ## ```
 proc status64*(op: cint; pCurrent: ptr sqlite3_int64; pHighwater: ptr sqlite3_int64;
-              resetFlag: cint): cint {.importc: "sqlite3_status64", cdecl.}
+              resetFlag: cint): cint {.importc: "sqlite3_status64", cdecl,
+                                    impsqlite3Hdr.}
 proc db_status*(a1: ptr sqlite3; op: cint; pCur: ptr cint; pHiwtr: ptr cint; resetFlg: cint): cint {.
-    importc: "sqlite3_db_status", cdecl.}
+    importc: "sqlite3_db_status", cdecl, impsqlite3Hdr.}
   ## ```
   ##   * CAPI3REF: Database Connection Status
   ##  * METHOD: sqlite3
@@ -6192,7 +6243,7 @@ proc db_status*(a1: ptr sqlite3; op: cint; pCur: ptr cint; pHiwtr: ptr cint; res
   ##  * See also: [sqlite3_status()] and [sqlite3_stmt_status()].
   ## ```
 proc stmt_status*(a1: ptr sqlite3_stmt; op: cint; resetFlg: cint): cint {.
-    importc: "sqlite3_stmt_status", cdecl.}
+    importc: "sqlite3_stmt_status", cdecl, impsqlite3Hdr.}
   ## ```
   ##   * CAPI3REF: Prepared Statement Status
   ##  * METHOD: sqlite3_stmt
@@ -6219,7 +6270,7 @@ proc stmt_status*(a1: ptr sqlite3_stmt; op: cint; resetFlg: cint): cint {.
   ## ```
 proc backup_init*(pDest: ptr sqlite3; zDestName: cstring; pSource: ptr sqlite3;
                  zSourceName: cstring): ptr sqlite3_backup {.
-    importc: "sqlite3_backup_init", cdecl.}
+    importc: "sqlite3_backup_init", cdecl, impsqlite3Hdr.}
   ## ```
   ##   * CAPI3REF: Online Backup API.
   ##  *
@@ -6407,17 +6458,17 @@ proc backup_init*(pDest: ptr sqlite3; zDestName: cstring; pSource: ptr sqlite3;
   ##  * possible that they return invalid values.
   ## ```
 proc backup_step*(p: ptr sqlite3_backup; nPage: cint): cint {.
-    importc: "sqlite3_backup_step", cdecl.}
+    importc: "sqlite3_backup_step", cdecl, impsqlite3Hdr.}
 proc backup_finish*(p: ptr sqlite3_backup): cint {.importc: "sqlite3_backup_finish",
-    cdecl.}
+    cdecl, impsqlite3Hdr.}
 proc backup_remaining*(p: ptr sqlite3_backup): cint {.
-    importc: "sqlite3_backup_remaining", cdecl.}
+    importc: "sqlite3_backup_remaining", cdecl, impsqlite3Hdr.}
 proc backup_pagecount*(p: ptr sqlite3_backup): cint {.
-    importc: "sqlite3_backup_pagecount", cdecl.}
+    importc: "sqlite3_backup_pagecount", cdecl, impsqlite3Hdr.}
 proc unlock_notify*(pBlocked: ptr sqlite3;
                    xNotify: proc (apArg: ptr pointer; nArg: cint) {.cdecl.};
                    pNotifyArg: pointer): cint {.importc: "sqlite3_unlock_notify",
-    cdecl.}
+    cdecl, impsqlite3Hdr.}
   ## ```
   ##   * CAPI3REF: Unlock Notification
   ##  * METHOD: sqlite3
@@ -6533,7 +6584,8 @@ proc unlock_notify*(pBlocked: ptr sqlite3;
   ##  * the special "DROP TABLE/INDEX" case, the extended error code is just 
   ##  * SQLITE_LOCKED.)^
   ## ```
-proc stricmp*(a1: cstring; a2: cstring): cint {.importc: "sqlite3_stricmp", cdecl.}
+proc stricmp*(a1: cstring; a2: cstring): cint {.importc: "sqlite3_stricmp", cdecl,
+    impsqlite3Hdr.}
   ## ```
   ##   * CAPI3REF: String Comparison
   ##  *
@@ -6543,8 +6595,9 @@ proc stricmp*(a1: cstring; a2: cstring): cint {.importc: "sqlite3_stricmp", cdec
   ##  * independence" that SQLite uses internally when comparing identifiers.
   ## ```
 proc strnicmp*(a1: cstring; a2: cstring; a3: cint): cint {.importc: "sqlite3_strnicmp",
-    cdecl.}
-proc strglob*(zGlob: cstring; zStr: cstring): cint {.importc: "sqlite3_strglob", cdecl.}
+    cdecl, impsqlite3Hdr.}
+proc strglob*(zGlob: cstring; zStr: cstring): cint {.importc: "sqlite3_strglob", cdecl,
+    impsqlite3Hdr.}
   ## ```
   ##   * CAPI3REF: String Globbing
   ##  
@@ -6561,7 +6614,7 @@ proc strglob*(zGlob: cstring; zStr: cstring): cint {.importc: "sqlite3_strglob",
   ##  * See also: [sqlite3_strlike()].
   ## ```
 proc strlike*(zGlob: cstring; zStr: cstring; cEsc: cuint): cint {.
-    importc: "sqlite3_strlike", cdecl.}
+    importc: "sqlite3_strlike", cdecl, impsqlite3Hdr.}
   ## ```
   ##   * CAPI3REF: String LIKE Matching
   ##  
@@ -6583,7 +6636,8 @@ proc strlike*(zGlob: cstring; zStr: cstring; cEsc: cuint): cint {.
   ##  *
   ##  * See also: [sqlite3_strglob()].
   ## ```
-proc log*(iErrCode: cint; zFormat: cstring) {.importc: "sqlite3_log", cdecl, varargs.}
+proc log*(iErrCode: cint; zFormat: cstring) {.importc: "sqlite3_log", cdecl,
+    impsqlite3Hdr, varargs.}
   ## ```
   ##   * CAPI3REF: Error Logging Interface
   ##  *
@@ -6606,7 +6660,7 @@ proc log*(iErrCode: cint; zFormat: cstring) {.importc: "sqlite3_log", cdecl, var
   ##  * buffer.
   ## ```
 proc wal_hook*(a1: ptr sqlite3; a2: proc (a1: pointer; a2: ptr sqlite3; a3: cstring; a4: cint): cint {.
-    cdecl.}; a3: pointer): pointer {.importc: "sqlite3_wal_hook", cdecl.}
+    cdecl.}; a3: pointer): pointer {.importc: "sqlite3_wal_hook", cdecl, impsqlite3Hdr.}
   ## ```
   ##   * CAPI3REF: Write-Ahead Log Commit Hook
   ##  * METHOD: sqlite3
@@ -6642,7 +6696,7 @@ proc wal_hook*(a1: ptr sqlite3; a2: proc (a1: pointer; a2: ptr sqlite3; a3: cstr
   ##  * overwrite any prior [sqlite3_wal_hook()] settings.
   ## ```
 proc wal_autocheckpoint*(db: ptr sqlite3; N: cint): cint {.
-    importc: "sqlite3_wal_autocheckpoint", cdecl.}
+    importc: "sqlite3_wal_autocheckpoint", cdecl, impsqlite3Hdr.}
   ## ```
   ##   * CAPI3REF: Configure an auto-checkpoint
   ##  * METHOD: sqlite3
@@ -6673,7 +6727,7 @@ proc wal_autocheckpoint*(db: ptr sqlite3; N: cint): cint {.
   ##  * for a particular application.
   ## ```
 proc wal_checkpoint*(db: ptr sqlite3; zDb: cstring): cint {.
-    importc: "sqlite3_wal_checkpoint", cdecl.}
+    importc: "sqlite3_wal_checkpoint", cdecl, impsqlite3Hdr.}
   ## ```
   ##   * CAPI3REF: Checkpoint a database
   ##  * METHOD: sqlite3
@@ -6696,7 +6750,7 @@ proc wal_checkpoint*(db: ptr sqlite3; zDb: cstring): cint {.
   ## ```
 proc wal_checkpoint_v2*(db: ptr sqlite3; zDb: cstring; eMode: cint; pnLog: ptr cint;
                        pnCkpt: ptr cint): cint {.
-    importc: "sqlite3_wal_checkpoint_v2", cdecl.}
+    importc: "sqlite3_wal_checkpoint_v2", cdecl, impsqlite3Hdr.}
   ## ```
   ##   * CAPI3REF: Checkpoint a database
   ##  * METHOD: sqlite3
@@ -6790,7 +6844,7 @@ proc wal_checkpoint_v2*(db: ptr sqlite3; zDb: cstring; eMode: cint; pnLog: ptr c
   ##  * from SQL.
   ## ```
 proc vtab_config*(a1: ptr sqlite3; op: cint): cint {.importc: "sqlite3_vtab_config",
-    cdecl, varargs.}
+    cdecl, impsqlite3Hdr, varargs.}
   ## ```
   ##   * CAPI3REF: Virtual Table Interface Configuration
   ##  *
@@ -6810,7 +6864,7 @@ proc vtab_config*(a1: ptr sqlite3; op: cint): cint {.importc: "sqlite3_vtab_conf
   ##  * is used.
   ## ```
 proc vtab_on_conflict*(a1: ptr sqlite3): cint {.importc: "sqlite3_vtab_on_conflict",
-    cdecl.}
+    cdecl, impsqlite3Hdr.}
   ## ```
   ##   * CAPI3REF: Determine The Virtual Table Conflict Policy
   ##  *
@@ -6822,7 +6876,7 @@ proc vtab_on_conflict*(a1: ptr sqlite3): cint {.importc: "sqlite3_vtab_on_confli
   ##  * [virtual table].
   ## ```
 proc vtab_nochange*(a1: ptr sqlite3_context): cint {.
-    importc: "sqlite3_vtab_nochange", cdecl.}
+    importc: "sqlite3_vtab_nochange", cdecl, impsqlite3Hdr.}
   ## ```
   ##   * CAPI3REF: Determine If Virtual Table Column Access Is For UPDATE
   ##  *
@@ -6841,7 +6895,7 @@ proc vtab_nochange*(a1: ptr sqlite3_context): cint {.
   ##  * same column in the [xUpdate] method.
   ## ```
 proc vtab_collation*(a1: ptr sqlite3_index_info; a2: cint): cstring {.
-    importc: "sqlite3_vtab_collation", cdecl.}
+    importc: "sqlite3_vtab_collation", cdecl, impsqlite3Hdr.}
   ## ```
   ##   * CAPI3REF: Determine The Collation For a Virtual Table Constraint
   ##  *
@@ -6857,7 +6911,7 @@ proc vtab_collation*(a1: ptr sqlite3_index_info; a2: cint): cstring {.
   ## ```
 proc stmt_scanstatus*(pStmt: ptr sqlite3_stmt; idx: cint; iScanStatusOp: cint;
                      pOut: pointer): cint {.importc: "sqlite3_stmt_scanstatus",
-    cdecl.}
+    cdecl, impsqlite3Hdr.}
   ## ```
   ##   * CAPI3REF: Prepared Statement Scan Status
   ##  * METHOD: sqlite3_stmt
@@ -6890,7 +6944,7 @@ proc stmt_scanstatus*(pStmt: ptr sqlite3_stmt; idx: cint; iScanStatusOp: cint;
   ##  * See also: [sqlite3_stmt_scanstatus_reset()]
   ## ```
 proc stmt_scanstatus_reset*(a1: ptr sqlite3_stmt) {.
-    importc: "sqlite3_stmt_scanstatus_reset", cdecl.}
+    importc: "sqlite3_stmt_scanstatus_reset", cdecl, impsqlite3Hdr.}
   ## ```
   ##   * CAPI3REF: Zero Scan-Status Counters
   ##  * METHOD: sqlite3_stmt
@@ -6900,7 +6954,8 @@ proc stmt_scanstatus_reset*(a1: ptr sqlite3_stmt) {.
   ##  * This API is only available if the library is built with pre-processor
   ##  * symbol [SQLITE_ENABLE_STMT_SCANSTATUS] defined.
   ## ```
-proc db_cacheflush*(a1: ptr sqlite3): cint {.importc: "sqlite3_db_cacheflush", cdecl.}
+proc db_cacheflush*(a1: ptr sqlite3): cint {.importc: "sqlite3_db_cacheflush", cdecl,
+                                        impsqlite3Hdr.}
   ## ```
   ##   * CAPI3REF: Flush caches to disk mid-transaction
   ##  *
@@ -6931,7 +6986,8 @@ proc db_cacheflush*(a1: ptr sqlite3): cint {.importc: "sqlite3_db_cacheflush", c
   ##  * ^This function does not set the database handle error code or message
   ##  * returned by the [sqlite3_errcode()] and [sqlite3_errmsg()] functions.
   ## ```
-proc system_errno*(a1: ptr sqlite3): cint {.importc: "sqlite3_system_errno", cdecl.}
+proc system_errno*(a1: ptr sqlite3): cint {.importc: "sqlite3_system_errno", cdecl,
+                                       impsqlite3Hdr.}
   ## ```
   ##   * CAPI3REF: The pre-update hook.
   ##  *
@@ -7026,7 +7082,7 @@ proc system_errno*(a1: ptr sqlite3): cint {.importc: "sqlite3_system_errno", cde
   ## ```
 proc snapshot_get*(db: ptr sqlite3; zSchema: cstring;
                   ppSnapshot: ptr ptr sqlite3_snapshot): cint {.
-    importc: "sqlite3_snapshot_get", cdecl.}
+    importc: "sqlite3_snapshot_get", cdecl, impsqlite3Hdr.}
   ## ```
   ##   * CAPI3REF: Record A Database Snapshot
   ##  * CONSTRUCTOR: sqlite3_snapshot
@@ -7071,7 +7127,7 @@ proc snapshot_get*(db: ptr sqlite3; zSchema: cstring;
   ##  * [SQLITE_ENABLE_SNAPSHOT] compile-time option is used.
   ## ```
 proc snapshot_open*(db: ptr sqlite3; zSchema: cstring; pSnapshot: ptr sqlite3_snapshot): cint {.
-    importc: "sqlite3_snapshot_open", cdecl.}
+    importc: "sqlite3_snapshot_open", cdecl, impsqlite3Hdr.}
   ## ```
   ##   * CAPI3REF: Start a read transaction on an historical snapshot
   ##  * METHOD: sqlite3_snapshot
@@ -7116,7 +7172,7 @@ proc snapshot_open*(db: ptr sqlite3; zSchema: cstring; pSnapshot: ptr sqlite3_sn
   ##  * [SQLITE_ENABLE_SNAPSHOT] compile-time option is used.
   ## ```
 proc snapshot_free*(a1: ptr sqlite3_snapshot) {.importc: "sqlite3_snapshot_free",
-    cdecl.}
+    cdecl, impsqlite3Hdr.}
   ## ```
   ##   * CAPI3REF: Destroy a snapshot
   ##  * DESTRUCTOR: sqlite3_snapshot
@@ -7129,7 +7185,7 @@ proc snapshot_free*(a1: ptr sqlite3_snapshot) {.importc: "sqlite3_snapshot_free"
   ##  * [SQLITE_ENABLE_SNAPSHOT] compile-time option is used.
   ## ```
 proc snapshot_cmp*(p1: ptr sqlite3_snapshot; p2: ptr sqlite3_snapshot): cint {.
-    importc: "sqlite3_snapshot_cmp", cdecl.}
+    importc: "sqlite3_snapshot_cmp", cdecl, impsqlite3Hdr.}
   ## ```
   ##   * CAPI3REF: Compare the ages of two snapshot handles.
   ##  * METHOD: sqlite3_snapshot
@@ -7156,7 +7212,7 @@ proc snapshot_cmp*(p1: ptr sqlite3_snapshot; p2: ptr sqlite3_snapshot): cint {.
   ##  * [SQLITE_ENABLE_SNAPSHOT] option.
   ## ```
 proc snapshot_recover*(db: ptr sqlite3; zDb: cstring): cint {.
-    importc: "sqlite3_snapshot_recover", cdecl.}
+    importc: "sqlite3_snapshot_recover", cdecl, impsqlite3Hdr.}
   ## ```
   ##   * CAPI3REF: Recover snapshots from a wal file
   ##  * METHOD: sqlite3_snapshot
@@ -7181,7 +7237,8 @@ proc snapshot_recover*(db: ptr sqlite3; zDb: cstring): cint {.
   ##  * [SQLITE_ENABLE_SNAPSHOT] option.
   ## ```
 proc serialize*(db: ptr sqlite3; zSchema: cstring; piSize: ptr sqlite3_int64;
-               mFlags: cuint): ptr cuchar {.importc: "sqlite3_serialize", cdecl.}
+               mFlags: cuint): ptr cuchar {.importc: "sqlite3_serialize", cdecl,
+                                        impsqlite3Hdr.}
   ## ```
   ##   * CAPI3REF: Serialize a database
   ##  *
@@ -7220,7 +7277,7 @@ proc serialize*(db: ptr sqlite3; zSchema: cstring; piSize: ptr sqlite3_int64;
   ## ```
 proc deserialize*(db: ptr sqlite3; zSchema: cstring; pData: ptr cuchar;
                  szDb: sqlite3_int64; szBuf: sqlite3_int64; mFlags: cuint): cint {.
-    importc: "sqlite3_deserialize", cdecl.}
+    importc: "sqlite3_deserialize", cdecl, impsqlite3Hdr.}
   ## ```
   ##   * CAPI3REF: Deserialize a database
   ##  *
@@ -7253,7 +7310,7 @@ proc deserialize*(db: ptr sqlite3; zSchema: cstring; pData: ptr cuchar;
 proc rtree_geometry_callback*(db: ptr sqlite3; zGeom: cstring; xGeom: proc (
     a1: ptr sqlite3_rtree_geometry; a2: cint; a3: ptr sqlite3_rtree_dbl; a4: ptr cint): cint {.
     cdecl.}; pContext: pointer): cint {.importc: "sqlite3_rtree_geometry_callback",
-                                    cdecl.}
+                                    cdecl, impsqlite3Hdr.}
   ## ```
   ##   * Register a geometry callback named zGeom that can be used as part of an
   ##  * R-Tree geometry query as follows:
@@ -7263,7 +7320,7 @@ proc rtree_geometry_callback*(db: ptr sqlite3; zGeom: cstring; xGeom: proc (
 proc rtree_query_callback*(db: ptr sqlite3; zQueryFunc: cstring; xQueryFunc: proc (
     a1: ptr sqlite3_rtree_query_info): cint {.cdecl.}; pContext: pointer;
                           xDestructor: proc (a1: pointer) {.cdecl.}): cint {.
-    importc: "sqlite3_rtree_query_callback", cdecl.}
+    importc: "sqlite3_rtree_query_callback", cdecl, impsqlite3Hdr.}
   ## ```
   ##   * Register a 2nd-generation geometry callback named zScore that can be 
   ##  * used as part of an R-Tree geometry query as follows:
