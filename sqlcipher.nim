@@ -1,4 +1,8 @@
 import std / [options, macros, typetraits]
+
+# sqlcipher/sqlite.nim must be generated before this module can be used.
+# To generate it use the `sqlite.nim` target of the Makefile in the same
+# directory as this file.
 from sqlcipher/sqlite as sqlite import nil
 
 # Adapted from https://github.com/GULPF/tiny_sqlite
@@ -19,7 +23,7 @@ type
         ## occurs.
         errorCode*: int32 ## \
             ## This is the error code that was returned by the underlying
-            ## SQLite library. 
+            ## SQLite library.
 
     DbValueKind* = enum ## \
         ## Enum of all possible value types in a Sqlite database.

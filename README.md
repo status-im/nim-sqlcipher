@@ -1,8 +1,9 @@
 # nim-sqlcipher
 [![License: MIT](https://img.shields.io/badge/License-MIT-blue.svg)](https://opensource.org/licenses/MIT)
-![Stability: experimental](https://img.shields.io/badge/stability-experimental-orange.svg)
+![Stability: experimental](https://img.shields.io/badge/Stability-experimental-orange.svg)
+[![Tests (GitHub Actions)](https://github.com/status-im/nim-sqlcipher/workflows/Tests/badge.svg?branch=master)](https://github.com/status-im/nim-sqlcipher/actions?query=workflow%3ATests+branch%3Amaster)
 
-A nim wrapper for the [SQLCipher](https://github.com/sqlcipher/sqlcipher). 
+A nim wrapper for the [SQLCipher](https://github.com/sqlcipher/sqlcipher).
 It builds SQLCipher and provides a simple API based on the [Tiny_SQLite](https://github.com/GULPF/tiny_sqlite) nimble package
 
 ## Requirements

@@ -1,13 +1,43 @@
-# Package
+mode = ScriptMode.Verbose
 
-packageName   = "sqlcipher"
-version       = "0.1.0"
-author        = "Status Research & Development GmbH"
-description   = "A wrapper for SQLCipher"
-license       = "MIT"
-skipDirs      = @["test"]
-srcDir        = "src"
+version     = "0.1.0"
+author      = "Status Research & Development GmbH"
+description = "A wrapper for SQLCipher"
+license     = "MIT"
+skipDirs    = @["test"]
 
-# Dependencies
-requires "nim >= 1.0.0"
-requires "nimterop >= 0.5.2"
+requires "nim >= 1.2.0",
+  "nimterop"
+
+proc buildAndRunTest(name: string,
+                     srcDir = "test/",
+                     outDir = "test/build/",
+                     params = "",
+                     cmdParams = "",
+                     lang = "c") =
+  rmdir outDir
+  mkDir outDir
+  # allow something like "nim test --verbosity:0 --hints:off beacon_chain.nims"
+  var extra_params = params
+  for i in 2..<paramCount():
+    extra_params &= " " & paramStr(i)
+  exec "nim " &
+    lang &
+    " --debugger:native" &
+    " --define:debug" &
+    " --define:ssl" &
+    " --nimcache:nimcache/test/" & name &
+    " --out:" & outDir & name &
+    " --passL:\"" & getEnv("SSL_LDFLAGS") & "\"" &
+    " --threads:on" &
+    " --tlsEmulation:off" &
+    " " &
+    extra_params &
+    " " &
+    srcDir & name & ".nim" &
+    " " &
+    cmdParams
+  exec outDir & name
+
+task tests, "Run all tests":
+  buildAndRunTest "db_smoke"
