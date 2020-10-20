@@ -1,0 +1,24 @@
+[submodule "vendor/nimbus-build-system"]
+	path = vendor/nimbus-build-system
+	url = https://github.com/status-im/nimbus-build-system.git
+[submodule "vendor/sqlcipher"]
+	path = vendor/sqlcipher
+	url = https://github.com/sqlcipher/sqlcipher.git
+[submodule "vendor/nimterop"]
+	path = vendor/nimterop
+	url = https://github.com/nimterop/nimterop.git
+[submodule "vendor/nim-regex"]
+	path = vendor/nim-regex
+	url = https://github.com/nitely/nim-regex.git
+[submodule "vendor/nim-unicodedb"]
+	path = vendor/nim-unicodedb
+	url = https://github.com/nitely/nim-unicodedb.git
+[submodule "vendor/nim-unicodeplus"]
+	path = vendor/nim-unicodeplus
+	url = https://github.com/nitely/nim-unicodeplus.git
+[submodule "vendor/nim-segmentation"]
+	path = vendor/nim-segmentation
+	url = https://github.com/nitely/nim-segmentation.git
+[submodule "vendor/cligen"]
+	path = vendor/cligen
+	url = https://github.com/c-blake/cligen.git
