@@ -56,7 +56,7 @@ jobs:
           "${M}" -j${NPROC} NIMFLAGS="--parallelBuild:${NPROC}" V=1 update
           "${M}" -j${NPROC} NIMFLAGS="--parallelBuild:${NPROC}" V=1 deps
 
-      - name: Generate the sqlite.nim wrapper for SQLCipher
+      - name: Generate the sqlite.nim wrapper for SQLCipher (static)
         shell: bash
         run: |
           [[ ${{ matrix.platform }} = macos* ]] && \
@@ -73,7 +73,7 @@ jobs:
                             V=1 \
                             sqlite.nim
 
-      - name: Run tests
+      - name: Run tests (static)
         shell: bash
         run: |
           [[ ${{ matrix.platform }} = macos* ]] && \
@@ -87,5 +87,118 @@ jobs:
           "${M}" -j${NPROC} NIMFLAGS="--parallelBuild:${NPROC}" \
                             SSL_INCLUDE_DIR="${SSL_INCLUDE_DIR}" \
                             SSL_LIB_DIR="${SSL_LIB_DIR}" \
+                            V=1 \
+                            test
+
+      - name: Generate the sqlite.nim wrapper for SQLCipher (shared)
+        shell: bash
+        run: |
+          rm -rf nimcache sqlcipher sqlite test/build
+          [[ ${{ matrix.platform }} = macos* ]] && \
+            SSL_INCLUDE_DIR=/usr/local/opt/openssl@1.1/include && \
+            SSL_LIB_DIR=/usr/local/opt/openssl@1.1/lib
+          [[ ${{ matrix.platform }} = windows* ]] && \
+            export PATH="${PATH}:${HOME}/scoop/shims" && \
+            SSL_INCLUDE_DIR="${HOME}/scoop/apps/openssl-mingw/current/include" && \
+            SSL_LIB_DIR="${HOME}/scoop/apps/openssl-mingw/current/lib"
+          export M="$(which mingw32-make || echo make)"
+          "${M}" -j${NPROC} NIMFLAGS="--parallelBuild:${NPROC}" \
+                            SQLITE_STATIC=false \
+                            SSL_INCLUDE_DIR="${SSL_INCLUDE_DIR}" \
+                            SSL_LIB_DIR="${SSL_LIB_DIR}" \
+                            SSL_STATIC=false \
+                            V=1 \
+                            sqlite.nim
+
+      - name: Run tests (shared)
+        shell: bash
+        run: |
+          [[ ${{ matrix.platform }} = macos* ]] && \
+            SSL_INCLUDE_DIR=/usr/local/opt/openssl@1.1/include && \
+            SSL_LIB_DIR=/usr/local/opt/openssl@1.1/lib
+          [[ ${{ matrix.platform }} = windows* ]] && \
+            export PATH="${PATH}:${HOME}/scoop/shims" && \
+            SSL_INCLUDE_DIR="${HOME}/scoop/apps/openssl-mingw/current/include" && \
+            SSL_LIB_DIR="${HOME}/scoop/apps/openssl-mingw/current/lib"
+          export M="$(which mingw32-make || echo make)"
+          "${M}" -j${NPROC} NIMFLAGS="--parallelBuild:${NPROC}" \
+                            SQLITE_STATIC=false \
+                            SSL_INCLUDE_DIR="${SSL_INCLUDE_DIR}" \
+                            SSL_LIB_DIR="${SSL_LIB_DIR}" \
+                            SSL_STATIC=false \
+                            V=1 \
+                            test
+
+      - name: "Generate the sqlite.nim wrapper for SQLCipher (mixed: shared SQLITE)"
+        shell: bash
+        run: |
+          rm -rf nimcache sqlcipher sqlite test/build
+          [[ ${{ matrix.platform }} = macos* ]] && \
+            SSL_INCLUDE_DIR=/usr/local/opt/openssl@1.1/include && \
+            SSL_LIB_DIR=/usr/local/opt/openssl@1.1/lib
+          [[ ${{ matrix.platform }} = windows* ]] && \
+            export PATH="${PATH}:${HOME}/scoop/shims" && \
+            SSL_INCLUDE_DIR="${HOME}/scoop/apps/openssl-mingw/current/include" && \
+            SSL_LIB_DIR="${HOME}/scoop/apps/openssl-mingw/current/lib"
+          export M="$(which mingw32-make || echo make)"
+          "${M}" -j${NPROC} NIMFLAGS="--parallelBuild:${NPROC}" \
+                            SQLITE_STATIC=false \
+                            SSL_INCLUDE_DIR="${SSL_INCLUDE_DIR}" \
+                            SSL_LIB_DIR="${SSL_LIB_DIR}" \
+                            V=1 \
+                            sqlite.nim
+
+      - name: "Run tests (mixed: shared SQLITE)"
+        shell: bash
+        run: |
+          [[ ${{ matrix.platform }} = macos* ]] && \
+            SSL_INCLUDE_DIR=/usr/local/opt/openssl@1.1/include && \
+            SSL_LIB_DIR=/usr/local/opt/openssl@1.1/lib
+          [[ ${{ matrix.platform }} = windows* ]] && \
+            export PATH="${PATH}:${HOME}/scoop/shims" && \
+            SSL_INCLUDE_DIR="${HOME}/scoop/apps/openssl-mingw/current/include" && \
+            SSL_LIB_DIR="${HOME}/scoop/apps/openssl-mingw/current/lib"
+          export M="$(which mingw32-make || echo make)"
+          "${M}" -j${NPROC} NIMFLAGS="--parallelBuild:${NPROC}" \
+                            SQLITE_STATIC=false \
+                            SSL_INCLUDE_DIR="${SSL_INCLUDE_DIR}" \
+                            SSL_LIB_DIR="${SSL_LIB_DIR}" \
+                            V=1 \
+                            test
+
+      - name: "Generate the sqlite.nim wrapper for SQLCipher (mixed: shared SSL)"
+        shell: bash
+        run: |
+          rm -rf nimcache sqlcipher sqlite test/build
+          [[ ${{ matrix.platform }} = macos* ]] && \
+            SSL_INCLUDE_DIR=/usr/local/opt/openssl@1.1/include && \
+            SSL_LIB_DIR=/usr/local/opt/openssl@1.1/lib
+          [[ ${{ matrix.platform }} = windows* ]] && \
+            export PATH="${PATH}:${HOME}/scoop/shims" && \
+            SSL_INCLUDE_DIR="${HOME}/scoop/apps/openssl-mingw/current/include" && \
+            SSL_LIB_DIR="${HOME}/scoop/apps/openssl-mingw/current/lib"
+          export M="$(which mingw32-make || echo make)"
+          "${M}" -j${NPROC} NIMFLAGS="--parallelBuild:${NPROC}" \
+                            SSL_INCLUDE_DIR="${SSL_INCLUDE_DIR}" \
+                            SSL_LIB_DIR="${SSL_LIB_DIR}" \
+                            SSL_STATIC=false \
+                            V=1 \
+                            sqlite.nim
+
+      - name: "Run tests (mixed: shared SSL)"
+        shell: bash
+        run: |
+          [[ ${{ matrix.platform }} = macos* ]] && \
+            SSL_INCLUDE_DIR=/usr/local/opt/openssl@1.1/include && \
+            SSL_LIB_DIR=/usr/local/opt/openssl@1.1/lib
+          [[ ${{ matrix.platform }} = windows* ]] && \
+            export PATH="${PATH}:${HOME}/scoop/shims" && \
+            SSL_INCLUDE_DIR="${HOME}/scoop/apps/openssl-mingw/current/include" && \
+            SSL_LIB_DIR="${HOME}/scoop/apps/openssl-mingw/current/lib"
+          export M="$(which mingw32-make || echo make)"
+          "${M}" -j${NPROC} NIMFLAGS="--parallelBuild:${NPROC}" \
+                            SSL_INCLUDE_DIR="${SSL_INCLUDE_DIR}" \
+                            SSL_LIB_DIR="${SSL_LIB_DIR}" \
+                            SSL_STATIC=false \
                             V=1 \
                             test
