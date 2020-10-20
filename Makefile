@@ -70,8 +70,10 @@ update: | update-common
 SQLITE_CDEFS ?= -DSQLITE_HAS_CODEC -DSQLITE_TEMP_STORE=3
 SQLITE_CFLAGS ?= -pthread
 ifndef SQLITE_LDFLAGS
- ifneq ($(detected_OS),macOS)
-  SQLITE_LDFLAGS := -pthread
+ ifeq ($(detected_OS),Windows)
+  SQLITE_LDFLAGS := -lwinpthread
+ else
+  SQLITE_LDFLAGS := -lpthread
  endif
 endif
 SQLITE_STATIC ?= true
@@ -99,7 +101,7 @@ ifndef SSL_LDFLAGS
 endif
 
 SQLITE3_C ?= sqlite/sqlite3.c
-SQLITE3_H ?= $(CURDIR)/sqlite/sqlite3.h
+SQLITE3_H ?= $(shell pwd)/sqlite/sqlite3.h
 
 $(SQLITE3_C): | deps
 ifeq ($(detected_OS),Windows)
@@ -125,7 +127,7 @@ endif
 
 sqlite3.c: $(SQLITE3_C)
 
-SQLITE_STATIC_LIB ?= $(CURDIR)/sqlite/sqlite3.a
+SQLITE_STATIC_LIB ?= $(shell pwd)/sqlite/sqlite3.a
 
 $(SQLITE_STATIC_LIB): $(SQLITE3_C)
 	echo -e $(BUILD_MSG) "SQLCipher static library"
@@ -148,27 +150,31 @@ ifndef SHARED_LIB_EXT
  endif
 endif
 
-SQLITE_SHARED_LIB ?= $(CURDIR)/sqlite/libsqlite3.$(SHARED_LIB_EXT)
+SQLITE_SHARED_LIB ?= $(shell pwd)/sqlite/libsqlite3.$(SHARED_LIB_EXT)
 
-ifndef PLATFORM_LINKER_FLAGS
+ifndef PLATFORM_FLAGS
  ifeq ($(detected_OS),macOS)
-  PLATFORM_LINKER_FLAGS := -dylib
+  ifeq ($(SSL_STATIC),false)
+   PLATFORM_FLAGS := -shared -dylib -undefined dynamic_lookup
+  else
+   PLATFORM_FLAGS := -shared -dylib -undefined dynamic_lookup $(SSL_LDFLAGS)
+  endif
+ else ifeq ($(detected_OS),Windows)
+  PLATFORM_FLAGS := -shared $(SSL_LDFLAGS)
+ else
+  PLATFORM_FLAGS := -shared -fPIC
  endif
 endif
 
 $(SQLITE_SHARED_LIB): $(SQLITE3_C)
 	echo -e $(BUILD_MSG) "SQLCipher shared library"
 	+ $(ENV_SCRIPT) $(CC) \
-		-c -fPIC \
-		sqlite/sqlite3.c \
 		$(SQLITE_CDEFS) \
 		$(SQLITE_CFLAGS) \
 		$(SSL_CFLAGS) \
-		-o sqlite/sqlite3.o $(HANDLE_OUTPUT)
-	$(ENV_SCRIPT) ld \
-		$(PLATFORM_LINKER_FLAGS) \
-		-undefined dynamic_lookup \
-		sqlite/sqlite3.o \
+		sqlite/sqlite3.c \
+		$(SQLITE_LDFLAGS) \
+		$(PLATFORM_FLAGS) \
 		-o $(SQLITE_SHARED_LIB) $(HANDLE_OUTPUT)
 
 ifndef SQLITE_LIB
@@ -206,7 +212,7 @@ SQLITE_NIM ?= sqlcipher/sqlite.nim
 $(SQLITE_NIM): $(NIMTEROP_TOAST) $(SQLITE_LIB)
 	echo -e $(BUILD_MSG) "Nim wrapper for SQLCipher"
 	+ mkdir -p sqlcipher
-	SQLITE_CDEFS="$(SQLITE_CDEFS)"\
+	SQLITE_CDEFS="$(SQLITE_CDEFS)" \
 	SQLITE_STATIC="$(SQLITE_STATIC)" \
 	SQLITE3_H="$(SQLITE3_H)" \
 	SQLITE_LIB="$(SQLITE_LIB)" \
@@ -219,7 +225,17 @@ $(SQLITE_NIM): $(NIMTEROP_TOAST) $(SQLITE_LIB)
 sqlite.nim: $(SQLITE_NIM)
 
 test: $(SQLITE_NIM)
+ifeq ($(detected_OS),macOS)
 	SSL_LDFLAGS="$(SSL_LDFLAGS)" \
 	$(ENV_SCRIPT) nimble tests
+else ifeq ($(detected_OS),Windows)
+	PATH="$(shell dirname $(SQLITE_SHARED_LIB)):$${PATH}" \
+	SSL_LDFLAGS="$(SSL_LDFLAGS)" \
+	$(ENV_SCRIPT) nimble tests
+else
+	LD_LIBRARY_PATH="$(shell pwd)/sqlite$${LD_LIBRARY_PATH:+:$${LD_LIBRARY_PATH}}" \
+	SSL_LDFLAGS="$(SSL_LDFLAGS)" \
+	$(ENV_SCRIPT) nimble tests
+endif
 
 endif # "variables.mk" was not included
