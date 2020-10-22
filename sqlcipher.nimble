@@ -9,6 +9,8 @@ skipDirs    = @["test"]
 requires "nim >= 1.2.0",
   "nimterop"
 
+import strutils
+
 proc buildAndRunTest(name: string,
                      srcDir = "test/",
                      outDir = "test/build/",
@@ -28,7 +30,7 @@ proc buildAndRunTest(name: string,
     " --define:ssl" &
     " --nimcache:nimcache/test/" & name &
     " --out:" & outDir & name &
-    " --passL:\"" & getEnv("SSL_LDFLAGS") & "\"" &
+    (if getEnv("SSL_LDFLAGS").strip != "": " --passL:\"" & getEnv("SSL_LDFLAGS") & "\"" else: "") &
     " --threads:on" &
     " --tlsEmulation:off" &
     " " &
