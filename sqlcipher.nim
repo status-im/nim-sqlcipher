@@ -170,6 +170,7 @@ proc `$`*(dbVal: DbValue): string =
     of sqliteBlob:    result.add "<blob>"
     of sqliteNull:    result.add "nil"
     result.add "]"
+]#
 
 proc exec*(db: DbConn, sql: string, params: varargs[DbValue, toDbValue]) =
     ## Executes ``sql`` and raises SqliteError if not successful.
@@ -178,6 +179,7 @@ proc exec*(db: DbConn, sql: string, params: varargs[DbValue, toDbValue]) =
     defer: prepared.finalize()
     discard prepared.next
 
+#[
 # TODO: uncomment and test
 proc execMany*(db: DbConn, sql: string, params: seq[seq[DbValue]]) =
     ## Executes ``sql`` repeatedly using each element of ``params`` as parameters.
