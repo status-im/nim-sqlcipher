@@ -28,6 +28,7 @@ proc buildAndRunTest(name: string,
     " --debugger:native" &
     " --define:debug" &
     " --define:ssl" &
+    (if getEnv("SSL_STATIC").strip != "false": " --dynlibOverride:ssl" else: "") &
     " --nimcache:nimcache/test/" & name &
     " --out:" & outDir & name &
     (if getEnv("SSL_LDFLAGS").strip != "": " --passL:\"" & getEnv("SSL_LDFLAGS") & "\"" else: "") &
