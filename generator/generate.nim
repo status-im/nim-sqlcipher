@@ -24,7 +24,7 @@ static:
   dynamicCdefine()
 
   when getEnv("SQLITE_STATIC") == "false":
-    cPassL("-L" & splitPath($getEnv("SQLITE_LIB")).head & " " & "-lsqlite3")
+    cPassL("-L" & splitPath($getEnv("SQLITE_LIB")).head & " " & "-lsqlcipher")
   when getEnv("SQLITE_STATIC") != "false":
     cPassL($getEnv("SQLITE_LIB"))
 

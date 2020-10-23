@@ -67,17 +67,7 @@ deps: | deps-common
 
 update: | update-common
 
-SQLITE_CDEFS ?= -DSQLITE_HAS_CODEC -DSQLITE_TEMP_STORE=3
-SQLITE_CFLAGS ?= -pthread
-ifndef SQLITE_LDFLAGS
- ifeq ($(detected_OS),Windows)
-  SQLITE_LDFLAGS := -lwinpthread
- else
-  SQLITE_LDFLAGS := -lpthread
- endif
-endif
-SQLITE_STATIC ?= true
-
+SSL_STATIC ?= true
 SSL_INCLUDE_DIR ?= /usr/include
 ifeq ($(SSL_INCLUDE_DIR),)
  override SSL_INCLUDE_DIR = /usr/include
@@ -86,21 +76,32 @@ SSL_LIB_DIR ?= /usr/lib/x86_64-linux-gnu
 ifeq ($(SSL_LIB_DIR),)
  override SSL_LIB_DIR = /usr/lib/x86_64-linux-gnu
 endif
-
-SSL_CFLAGS ?= -I$(SSL_INCLUDE_DIR)
-SSL_STATIC ?= true
 ifndef SSL_LDFLAGS
  ifeq ($(SSL_STATIC),false)
   SSL_LDFLAGS := -L$(SSL_LIB_DIR) -lcrypto
+  SSL_LDFLAGS_SQLITE3_C ?= $(SSL_LDFLAGS)
  else
-  SSL_LDFLAGS := -L$(SSL_LIB_DIR) $(SSL_LIB_DIR)/libcrypto.a
+  SSL_LDFLAGS := $(SSL_LIB_DIR)/libcrypto.a
+  # SQLCipher's configure script fails if SSL_LIB_DIR isn't supplied with -L in LDFLAGS
+  SSL_LDFLAGS_SQLITE3_C ?= -L$(SSL_LIB_DIR) $(SSL_LDFLAGS)
  endif
  ifeq ($(detected_OS),Windows)
   SSL_LDFLAGS += -lws2_32
  endif
 endif
 
-SQLITE3_C ?= sqlite/sqlite3.c
+SQLITE_STATIC ?= true
+SQLITE_CDEFS ?= -DSQLITE_HAS_CODEC -DSQLITE_TEMP_STORE=3
+SQLITE_CFLAGS ?= -I$(SSL_INCLUDE_DIR) -pthread
+ifndef SQLITE_LDFLAGS
+ ifeq ($(detected_OS),Windows)
+  SQLITE_LDFLAGS := -lwinpthread
+ else
+  SQLITE_LDFLAGS := -lpthread
+ endif
+endif
+
+SQLITE3_C ?= $(shell pwd)/sqlite/sqlite3.c
 SQLITE3_H ?= $(shell pwd)/sqlite/sqlite3.h
 
 $(SQLITE3_C): | deps
@@ -108,18 +109,21 @@ ifeq ($(detected_OS),Windows)
 	sed -i "s/tr -d '\\\\\\n'/tr -d '\\\\\\r\\\\\\n'/" vendor/sqlcipher/configure
 endif
 	echo -e $(BUILD_MSG) "SQLCipher's SQLite C amalgamation"
-	+ cd vendor/sqlcipher && \
+	+ mkdir -p sqlite
+	cd vendor/sqlcipher && \
 		./configure \
-			CFLAGS="$(SQLITE_CDEFS) $(SQLITE_CFLAGS) $(SSL_CFLAGS)" \
-			LDFLAGS="$(SQLITE_LDFLAGS) $(SSL_LDFLAGS)" \
+			CFLAGS="$(SQLITE_CDEFS) $(SQLITE_CFLAGS)" \
+			LDFLAGS="$(SQLITE_LDFLAGS) $(SSL_LDFLAGS_SQLITE3_C)" \
 			$(HANDLE_OUTPUT)
 ifeq ($(detected_OS),Windows)
-	sed -E -i "s/TOP = \\/([A-Za-z])/TOP = \\u\\1:/" vendor/sqlcipher/Makefile
+	sed -i "/TOP =/c\\\\\\TOP := \$$(shell cygpath -m \$$(shell pwd))" vendor/sqlcipher/Makefile
+	sed -i "s/\$$(TCLSH_CMD) \$$(TOP)\\/tool\\/mkshellc.tcl/\$$(TCLSH_CMD) \$$(shell pwd)\\/tool\\/mkshellc.tcl/" vendor/sqlcipher/Makefile
 endif
 	cd vendor/sqlcipher && $(MAKE) sqlite3.c $(HANDLE_OUTPUT)
-	mkdir -p sqlite
-	cp vendor/sqlcipher/sqlite3.c sqlite/
-	cp vendor/sqlcipher/sqlite3.h sqlite/
+	cp \
+		vendor/sqlcipher/sqlite3.c \
+		vendor/sqlcipher/sqlite3.h \
+		sqlite/
 	cd vendor/sqlcipher && \
 		git clean -dfx $(HANDLE_OUTPUT) && \
 		(git stash $(HANDLE_OUTPUT) || true) && \
@@ -127,18 +131,19 @@ endif
 
 sqlite3.c: $(SQLITE3_C)
 
-SQLITE_STATIC_LIB ?= $(shell pwd)/sqlite/sqlite3.a
+SQLITE_STATIC_LIB ?= $(shell pwd)/sqlcipher/sqlcipher.a
+SQLITE_STATIC_OBJ ?= sqlcipher/sqlcipher.o
 
 $(SQLITE_STATIC_LIB): $(SQLITE3_C)
 	echo -e $(BUILD_MSG) "SQLCipher static library"
-	+ $(ENV_SCRIPT) $(CC) \
-		-c \
-		sqlite/sqlite3.c \
+	+ mkdir -p sqlcipher
+	$(ENV_SCRIPT) $(CC) \
 		$(SQLITE_CDEFS) \
 		$(SQLITE_CFLAGS) \
-		$(SSL_CFLAGS) \
-		-o sqlite/sqlite3.o $(HANDLE_OUTPUT)
-	$(ENV_SCRIPT) ar rcs $(SQLITE_STATIC_LIB) sqlite/sqlite3.o $(HANDLE_OUTPUT)
+		$(SQLITE3_C) \
+		-c \
+		-o $(SQLITE_STATIC_OBJ) $(HANDLE_OUTPUT)
+	$(ENV_SCRIPT) ar rcs $(SQLITE_STATIC_LIB) $(SQLITE_STATIC_OBJ) $(HANDLE_OUTPUT)
 
 ifndef SHARED_LIB_EXT
  ifeq ($(detected_OS),macOS)
@@ -150,31 +155,26 @@ ifndef SHARED_LIB_EXT
  endif
 endif
 
-SQLITE_SHARED_LIB ?= $(shell pwd)/sqlite/libsqlite3.$(SHARED_LIB_EXT)
+SQLITE_SHARED_LIB ?= $(shell pwd)/sqlcipher/libsqlcipher.$(SHARED_LIB_EXT)
 
-ifndef PLATFORM_FLAGS
+ifndef PLATFORM_FLAGS_SHARED_LIB
  ifeq ($(detected_OS),macOS)
-  ifeq ($(SSL_STATIC),false)
-   PLATFORM_FLAGS := -shared -dylib -undefined dynamic_lookup
-  else
-   PLATFORM_FLAGS := -shared -dylib -undefined dynamic_lookup $(SSL_LDFLAGS)
-  endif
- else ifeq ($(detected_OS),Windows)
-  PLATFORM_FLAGS := -shared $(SSL_LDFLAGS)
+  PLATFORM_FLAGS_SHARED_LIB := -shared -dylib
  else
-  PLATFORM_FLAGS := -shared -fPIC
+  PLATFORM_FLAGS_SHARED_LIB := -shared -fPIC
  endif
 endif
 
 $(SQLITE_SHARED_LIB): $(SQLITE3_C)
 	echo -e $(BUILD_MSG) "SQLCipher shared library"
-	+ $(ENV_SCRIPT) $(CC) \
+	+ mkdir -p sqlcipher
+	$(ENV_SCRIPT) $(CC) \
 		$(SQLITE_CDEFS) \
 		$(SQLITE_CFLAGS) \
-		$(SSL_CFLAGS) \
-		sqlite/sqlite3.c \
+		$(SQLITE3_C) \
 		$(SQLITE_LDFLAGS) \
-		$(PLATFORM_FLAGS) \
+		$(SSL_LDFLAGS) \
+		$(PLATFORM_FLAGS_SHARED_LIB) \
 		-o $(SQLITE_SHARED_LIB) $(HANDLE_OUTPUT)
 
 ifndef SQLITE_LIB
@@ -219,7 +219,7 @@ $(SQLITE_NIM): $(NIMTEROP_TOAST) $(SQLITE_LIB)
 	$(ENV_SCRIPT) nim c $(NIM_PARAMS) \
 		--nimcache:nimcache/sqlcipher \
 		--verbosity:0 \
-		generator/generate.nim > sqlcipher/sqlite.nim 2> /dev/null
+		generator/generate.nim > $(SQLITE_NIM) 2> /dev/null
 	rm -rf generator/generate generator/generate.exe generator/generate.dSYM
 
 sqlite.nim: $(SQLITE_NIM)
@@ -227,14 +227,17 @@ sqlite.nim: $(SQLITE_NIM)
 test: $(SQLITE_NIM)
 ifeq ($(detected_OS),macOS)
 	SSL_LDFLAGS="$(SSL_LDFLAGS)" \
+	SSL_STATIC="$(SSL_STATIC)" \
 	$(ENV_SCRIPT) nimble tests
 else ifeq ($(detected_OS),Windows)
-	PATH="$(shell dirname $(SQLITE_SHARED_LIB)):$${PATH}" \
+	PATH="$(shell dirname $(SQLITE_SHARED_LIB)):$(shell dirname $(SSL_LIB_DIR)):$(SSL_LIB_DIR):$${PATH}" \
 	SSL_LDFLAGS="$(SSL_LDFLAGS)" \
+	SSL_STATIC="$(SSL_STATIC)" \
 	$(ENV_SCRIPT) nimble tests
 else
-	LD_LIBRARY_PATH="$(shell pwd)/sqlite$${LD_LIBRARY_PATH:+:$${LD_LIBRARY_PATH}}" \
+	LD_LIBRARY_PATH="$(shell dirname $(SQLITE_SHARED_LIB)):$(SSL_LIB_DIR)$${LD_LIBRARY_PATH:+:$${LD_LIBRARY_PATH}}" \
 	SSL_LDFLAGS="$(SSL_LDFLAGS)" \
+	SSL_STATIC="$(SSL_STATIC)" \
 	$(ENV_SCRIPT) nimble tests
 endif
 
