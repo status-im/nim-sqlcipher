@@ -18,6 +18,10 @@ jobs:
 
     name: ${{ matrix.platform }} - ${{ matrix.env.NPROC }} processes
 
+    # sanity check: build of `master` was successful on all platforms
+    # previously, but does it still work in a Windows environment in GitHub
+    # Actions?
+
     steps:
       - name: Install Scoop
         if: startsWith(matrix.platform, 'windows')
