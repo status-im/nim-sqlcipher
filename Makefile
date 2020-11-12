@@ -16,6 +16,9 @@ BUILD_SYSTEM_DIR := vendor/nimbus-build-system
 .PHONY: \
 	all \
 	clean \
+	clean-build-dirs \
+	clean-generator \
+	clean-nimterop \
 	deps \
 	sqlite \
 	sqlite.nim \
@@ -49,19 +52,28 @@ ifeq ($(OS),Windows_NT) # is Windows_NT on XP, 2000, 7, Vista, 10...
 else ifeq ($(strip $(shell uname)),Darwin)
  detected_OS := macOS
 else
- detected_OS := $(strip $(shell uname)) # e.g. Linux
+ # e.g. Linux
+ detected_OS := $(strip $(shell uname))
 endif
 
-clean: | clean-common
+clean: | clean-common clean-build-dirs clean-generator clean-nimterop
+
+clean-build-dirs:
 	rm -rf \
-		$(NIMTEROP_TOAST) \
-		$(NIMTEROP_TOAST).dSYM \
-		generator/generate \
-		generator/generate.exe \
-		generator/generate.dSYM \
 		sqlcipher \
 		sqlite \
 		test/build
+
+clean-generator:
+	rm -rf \
+		generator/generate \
+		generator/generate.exe \
+		generator/generate.dSYM
+
+clean-nimterop:
+	rm -rf \
+		$(NIMTEROP_TOAST) \
+		$(NIMTEROP_TOAST).dSYM
 
 deps: | deps-common
 
@@ -79,15 +91,18 @@ endif
 ifndef SSL_LDFLAGS
  ifeq ($(SSL_STATIC),false)
   SSL_LDFLAGS := -L$(SSL_LIB_DIR) -lcrypto
-  SSL_LDFLAGS_SQLITE3_C ?= $(SSL_LDFLAGS)
  else
   SSL_LDFLAGS := $(SSL_LIB_DIR)/libcrypto.a
-  # SQLCipher's configure script fails if SSL_LIB_DIR isn't supplied with -L in LDFLAGS
-  SSL_LDFLAGS_SQLITE3_C ?= -L$(SSL_LIB_DIR) $(SSL_LDFLAGS)
  endif
  ifeq ($(detected_OS),Windows)
   SSL_LDFLAGS += -lws2_32
  endif
+endif
+ifeq ($(SSL_STATIC),false)
+ SSL_LDFLAGS_SQLITE3_C ?= $(SSL_LDFLAGS)
+else
+ # SQLCipher's configure script fails if SSL_LIB_DIR isn't supplied with -L in LDFLAGS
+ SSL_LDFLAGS_SQLITE3_C ?= -L$(SSL_LIB_DIR) $(SSL_LDFLAGS)
 endif
 
 SQLITE_STATIC ?= true
@@ -124,10 +139,11 @@ endif
 		vendor/sqlcipher/sqlite3.c \
 		vendor/sqlcipher/sqlite3.h \
 		sqlite/
-	cd vendor/sqlcipher && \
-		git clean -dfx $(HANDLE_OUTPUT) && \
-		(git stash $(HANDLE_OUTPUT) || true) && \
-		(git stash drop $(HANDLE_OUTPUT) || true)
+	cd vendor/sqlcipher && git clean -dfx $(HANDLE_OUTPUT)
+	([[ $(detected_OS) = Windows ]] && \
+		cd vendor/sqlcipher && \
+		git stash $(HANDLE_OUTPUT) && \
+		git stash drop $(HANDLE_OUTPUT)) || true
 
 sqlite3.c: $(SQLITE3_C)
 
@@ -220,7 +236,7 @@ $(SQLITE_NIM): $(NIMTEROP_TOAST) $(SQLITE_LIB)
 		--nimcache:nimcache/sqlcipher \
 		--verbosity:0 \
 		generator/generate.nim > $(SQLITE_NIM) 2> /dev/null
-	rm -rf generator/generate generator/generate.exe generator/generate.dSYM
+	$(MAKE) clean-generator
 
 sqlite.nim: $(SQLITE_NIM)
 
