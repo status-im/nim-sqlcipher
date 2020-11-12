@@ -19,6 +19,13 @@ jobs:
     name: ${{ matrix.platform }} - ${{ matrix.env.NPROC }} processes
 
     steps:
+      - name: Link Homebrew OpenSSL 1.1 to /usr/local/opt/openssl
+        if: startsWith(matrix.platform, 'macos')
+        shell: bash
+        run: |
+            rm -f /usr/local/opt/openssl
+            ln -s /usr/local/opt/openssl@1.1 /usr/local/opt/openssl
+
       - name: Install Scoop
         if: startsWith(matrix.platform, 'windows')
         shell: powershell
@@ -76,6 +83,7 @@ jobs:
       - name: Build the sqlite.nim wrapper and run tests (shared)
         shell: bash
         run: |
+          rm -rf nimcache sqlcipher sqlite test/build
           [[ ${{ matrix.platform }} = macos* ]] && \
             export SSL_INCLUDE_DIR=/usr/local/opt/openssl/include && \
             export SSL_LIB_DIR=/usr/local/opt/openssl/lib
@@ -95,6 +103,7 @@ jobs:
       - name: "Build the sqlite.nim wrapper and run tests (mixed: shared SQLITE)"
         shell: bash
         run: |
+          rm -rf nimcache sqlcipher sqlite test/build
           [[ ${{ matrix.platform }} = macos* ]] && \
             export SSL_INCLUDE_DIR=/usr/local/opt/openssl/include && \
             export SSL_LIB_DIR=/usr/local/opt/openssl/lib
@@ -113,6 +122,7 @@ jobs:
       - name: "Build the sqlite.nim wrapper and run tests (mixed: shared SSL)"
         shell: bash
         run: |
+          rm -rf nimcache sqlcipher sqlite test/build
           [[ ${{ matrix.platform }} = macos* ]] && \
             export SSL_INCLUDE_DIR=/usr/local/opt/openssl/include && \
             export SSL_LIB_DIR=/usr/local/opt/openssl/lib
