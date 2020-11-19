@@ -245,7 +245,7 @@ sqlite.nim: $(SQLITE_NIM)
 ifeq ($(SQLITE_STATIC),false)
  ifeq ($(SSL_STATIC),false)
   LD_LIBRARY_PATH_TEST ?= $(shell dirname $(SQLITE_SHARED_LIB)):$(SSL_LIB_DIR)$${LD_LIBRARY_PATH:+:$${LD_LIBRARY_PATH}}
-  PATH_TEST ?= $(shell dirname $(SQLITE_SHARED_LIB)):$(shell dirname $(SSL_LIB_DIR)):$(SSL_LIB_DIR):$${PATH}
+  PATH_TEST ?= $(shell dirname $(SQLITE_SHARED_LIB)):$(shell cygpath $(shell dirname $(SSL_LIB_DIR))):$(shell cygpath $(SSL_LIB_DIR)):$${PATH}
  else
   LD_LIBRARY_PATH_TEST ?= $(shell dirname $(SQLITE_SHARED_LIB))$${LD_LIBRARY_PATH:+:$${LD_LIBRARY_PATH}}
   PATH_TEST ?= $(shell dirname $(SQLITE_SHARED_LIB)):$${PATH}
@@ -253,7 +253,7 @@ ifeq ($(SQLITE_STATIC),false)
 else
  ifeq ($(SSL_STATIC),false)
   LD_LIBRARY_PATH_TEST ?= $(SSL_LIB_DIR)$${LD_LIBRARY_PATH:+:$${LD_LIBRARY_PATH}}
-  PATH_TEST ?= $(shell dirname $(SSL_LIB_DIR)):$(SSL_LIB_DIR):$${PATH}
+  PATH_TEST ?= $(shell cygpath $(shell dirname $(SSL_LIB_DIR))):$(shell cygpath $(SSL_LIB_DIR)):$${PATH}
  else
   LD_LIBRARY_PATH_TEST ?= $${LD_LIBRARY_PATH}
   PATH_TEST ?= $${PATH}
