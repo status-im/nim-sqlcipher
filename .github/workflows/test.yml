@@ -9,131 +9,80 @@ on:
 jobs:
   tests:
     strategy:
+      fail-fast: false
       matrix:
-        env:
-          - { NPROC: 2 }
-        platform: [macos-latest, ubuntu-latest, windows-latest]
-    runs-on: ${{ matrix.platform }}
-    env: ${{ matrix.env }}
-
-    name: ${{ matrix.platform }} - ${{ matrix.env.NPROC }} processes
+        platform:
+          - {
+            icon: 🏁,
+            os: windows,
+            shell: msys2,
+            include: /mingw64/include/openssl,
+            lib: /mingw64/lib,
+          }
+          - {
+            icon: 🍎,
+            os: macos,
+            shell: bash --noprofile --norc -eo pipefail,
+            include: /usr/local/opt/openssl/include,
+            lib: /usr/local/opt/openssl/lib,
+          }
+          - {
+            icon: 🐧,
+            os: ubuntu,
+            shell: bash --noprofile --norc -eo pipefail,
+            include: ,
+            lib: ,
+          }
+        sqlite:  [ true, false ]
+        openssl: [ true, false ]
+    name: ${{ matrix.platform.icon }} - SQLITE ${{ matrix.sqlite }} | SSL ${{ matrix.openssl }}
+    runs-on: ${{ matrix.platform.os }}-latest
+    env:
+      NPROC: 2
+    defaults:
+      run:
+        shell: ${{ matrix.platform.shell }} {0}
 
     steps:
+
       - name: Link Homebrew OpenSSL 1.1 to /usr/local/opt/openssl
-        if: startsWith(matrix.platform, 'macos')
-        shell: bash
+        if: matrix.platform.os == 'macos'
         run: |
             rm -f /usr/local/opt/openssl
             ln -s /usr/local/opt/openssl@1.1 /usr/local/opt/openssl
 
-      - name: Install Scoop
-        if: startsWith(matrix.platform, 'windows')
-        shell: powershell
-        run: |
-            iwr -useb get.scoop.sh | iex
-
-      - name: Install external dependencies with Scoop
-        if: startsWith(matrix.platform, 'windows')
-        shell: bash
-        run: |
-          export PATH="${PATH}:${HOME}/scoop/shims"
-          scoop install openssl-mingw
-
-      - name: Checkout code
-        uses: actions/checkout@v2
-
-      # We need to do this because of how github cache works
-      - name: Initialize submodules
-        shell: bash
-        run: |
-          git submodule update --init --recursive
-
-      - name: Cache Nim compiler
-        uses: actions/cache@v2
+      - uses: msys2/setup-msys2@v2
+        if: matrix.platform.os == 'windows'
         with:
-          path: |
-            vendor/nimbus-build-system/vendor/Nim/bin
-          key: ${{ runner.os }}-${{ matrix.env.NPROC }}-nim-${{ hashFiles('.gitmodules') }}
+          msystem: MINGW64
+          update: true
+          install: >
+            base-devel
+            git
+            mingw-w64-x86_64-toolchain
+            mingw-w64-x86_64-openssl
+
+      - uses: actions/checkout@v2
+        with:
+          submodules: recursive
+
+      - uses: actions/cache@v2
+        with:
+          path: vendor/nimbus-build-system/vendor/Nim/bin
+          key: ${{ runner.os }}-2-nim-${{ hashFiles('.gitmodules') }}
 
       - name: Install and build dependencies
-        shell: bash
         run: |
-          [[ ${{ matrix.platform }} = windows* ]] && export PATH="${PATH}:${HOME}/scoop/shims"
-          export M="$(which mingw32-make || echo make)"
-          "${M}" -j${NPROC} NIMFLAGS="--parallelBuild:${NPROC}" V=1 update
-          "${M}" -j${NPROC} NIMFLAGS="--parallelBuild:${NPROC}" V=1 deps
+          make -j${NPROC} NIMFLAGS="--parallelBuild:${NPROC}" V=1 update
+          make -j${NPROC} NIMFLAGS="--parallelBuild:${NPROC}" V=1 deps
 
-      - name: Build the sqlite.nim wrapper and run tests (static)
-        shell: bash
+      - name: Build the sqlite.nim wrapper and run tests
         run: |
-          [[ ${{ matrix.platform }} = macos* ]] && \
-            export SSL_INCLUDE_DIR=/usr/local/opt/openssl/include && \
-            export SSL_LIB_DIR=/usr/local/opt/openssl/lib
-          [[ ${{ matrix.platform }} = windows* ]] && \
-            export PATH="${PATH}:${HOME}/scoop/shims" && \
-            export SSL_INCLUDE_DIR="${HOME}/scoop/apps/openssl-mingw/current/include" && \
-            export SSL_LIB_DIR="${HOME}/scoop/apps/openssl-mingw/current/lib"
-          export M="$(which mingw32-make || echo make)"
-          "${M}" -j${NPROC} NIMFLAGS="--parallelBuild:${NPROC}" \
-                            SSL_INCLUDE_DIR="${SSL_INCLUDE_DIR}" \
-                            SSL_LIB_DIR="${SSL_LIB_DIR}" \
-                            V=1 \
-                            test
-
-      - name: Build the sqlite.nim wrapper and run tests (shared)
-        shell: bash
-        run: |
-          rm -rf nimcache sqlcipher sqlite test/build
-          [[ ${{ matrix.platform }} = macos* ]] && \
-            export SSL_INCLUDE_DIR=/usr/local/opt/openssl/include && \
-            export SSL_LIB_DIR=/usr/local/opt/openssl/lib
-          [[ ${{ matrix.platform }} = windows* ]] && \
-            export PATH="${PATH}:${HOME}/scoop/shims" && \
-            export SSL_INCLUDE_DIR="${HOME}/scoop/apps/openssl-mingw/current/include" && \
-            export SSL_LIB_DIR="${HOME}/scoop/apps/openssl-mingw/current/lib"
-          export M="$(which mingw32-make || echo make)"
-          "${M}" -j${NPROC} NIMFLAGS="--parallelBuild:${NPROC}" \
-                            SQLITE_STATIC=false \
-                            SSL_INCLUDE_DIR="${SSL_INCLUDE_DIR}" \
-                            SSL_LIB_DIR="${SSL_LIB_DIR}" \
-                            SSL_STATIC=false \
-                            V=1 \
-                            test
-
-      - name: "Build the sqlite.nim wrapper and run tests (mixed: shared SQLITE)"
-        shell: bash
-        run: |
-          rm -rf nimcache sqlcipher sqlite test/build
-          [[ ${{ matrix.platform }} = macos* ]] && \
-            export SSL_INCLUDE_DIR=/usr/local/opt/openssl/include && \
-            export SSL_LIB_DIR=/usr/local/opt/openssl/lib
-          [[ ${{ matrix.platform }} = windows* ]] && \
-            export PATH="${PATH}:${HOME}/scoop/shims" && \
-            export SSL_INCLUDE_DIR="${HOME}/scoop/apps/openssl-mingw/current/include" && \
-            export SSL_LIB_DIR="${HOME}/scoop/apps/openssl-mingw/current/lib"
-          export M="$(which mingw32-make || echo make)"
-          "${M}" -j${NPROC} NIMFLAGS="--parallelBuild:${NPROC}" \
-                            SQLITE_STATIC=false \
-                            SSL_INCLUDE_DIR="${SSL_INCLUDE_DIR}" \
-                            SSL_LIB_DIR="${SSL_LIB_DIR}" \
-                            V=1 \
-                            test
-
-      - name: "Build the sqlite.nim wrapper and run tests (mixed: shared SSL)"
-        shell: bash
-        run: |
-          rm -rf nimcache sqlcipher sqlite test/build
-          [[ ${{ matrix.platform }} = macos* ]] && \
-            export SSL_INCLUDE_DIR=/usr/local/opt/openssl/include && \
-            export SSL_LIB_DIR=/usr/local/opt/openssl/lib
-          [[ ${{ matrix.platform }} = windows* ]] && \
-            export PATH="${PATH}:${HOME}/scoop/shims" && \
-            export SSL_INCLUDE_DIR="${HOME}/scoop/apps/openssl-mingw/current/include" && \
-            export SSL_LIB_DIR="${HOME}/scoop/apps/openssl-mingw/current/lib"
-          export M="$(which mingw32-make || echo make)"
-          "${M}" -j${NPROC} NIMFLAGS="--parallelBuild:${NPROC}" \
-                            SSL_INCLUDE_DIR="${SSL_INCLUDE_DIR}" \
-                            SSL_LIB_DIR="${SSL_LIB_DIR}" \
-                            SSL_STATIC=false \
-                            V=1 \
-                            test
+          make -j${NPROC} "$@" \
+            NIMFLAGS="--parallelBuild:${NPROC}" \
+            SSL_INCLUDE_DIR="${{ matrix.platform.include }}" \
+            SSL_LIB_DIR="${{ matrix.platform.lib }}" \
+            SQLITE_STATIC=${{ matrix.sqlite }} \
+            SSL_STATIC=${{ matrix.openssl }} \
+            V=1 \
+            test
