@@ -120,9 +120,6 @@ SQLITE3_C ?= $(shell pwd)/sqlite/sqlite3.c
 SQLITE3_H ?= $(shell pwd)/sqlite/sqlite3.h
 
 $(SQLITE3_C): | deps
-ifeq ($(detected_OS),Windows)
-	sed -i "s/tr -d '\\\\\\n'/tr -d '\\\\\\r\\\\\\n'/" vendor/sqlcipher/configure
-endif
 	echo -e $(BUILD_MSG) "SQLCipher's SQLite C amalgamation"
 	+ mkdir -p sqlite
 	cd vendor/sqlcipher && \
@@ -130,10 +127,6 @@ endif
 			CFLAGS="$(SQLITE_CDEFS) $(SQLITE_CFLAGS)" \
 			LDFLAGS="$(SQLITE_LDFLAGS) $(SSL_LDFLAGS_SQLITE3_C)" \
 			$(HANDLE_OUTPUT)
-ifeq ($(detected_OS),Windows)
-	sed -i "/TOP =/c\\\\\\TOP := \$$(shell cygpath -m \$$(shell pwd))" vendor/sqlcipher/Makefile
-	sed -i "s/\$$(TCLSH_CMD) \$$(TOP)\\/tool\\/mkshellc.tcl/\$$(TCLSH_CMD) \$$(shell pwd)\\/tool\\/mkshellc.tcl/" vendor/sqlcipher/Makefile
-endif
 	cd vendor/sqlcipher && $(MAKE) sqlite3.c $(HANDLE_OUTPUT)
 	cp \
 		vendor/sqlcipher/sqlite3.c \
