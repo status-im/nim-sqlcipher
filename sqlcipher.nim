@@ -1,9 +1,10 @@
-import std / [options, macros, typetraits]
+import std / [options, macros, typetraits], sugar, sequtils
 
 # sqlcipher/sqlite.nim must be generated before this module can be used.
 # To generate it use the `sqlite.nim` target of the Makefile in the same
 # directory as this file.
 from sqlcipher/sqlite as sqlite import nil
+from stew/shims/macros as stew_macros import hasCustomPragmaFixed, getCustomPragmaFixed
 
 # Adapted from https://github.com/GULPF/tiny_sqlite
 
@@ -46,6 +47,12 @@ type
             blobVal*: seq[byte]
         of sqliteNull:
             discard
+
+    DbColumn* = object
+        name*: string
+        val*: DbValue
+    
+    DbRow* = seq[DbColumn]
 
     Tbind_destructor_func* = proc (para1: pointer){.cdecl, locks: 0, tags: [], raises: [], gcsafe.}
 
@@ -134,7 +141,11 @@ proc nilDbValue(): DbValue =
     ## we use this internally.
     DbValue(kind: sqliteNull)
 
-proc fromDbValue*(val: DbValue, T: typedesc[Ordinal]): T = val.intval.T
+proc fromDbValue*(val: DbValue, T: typedesc[Ordinal]): T =
+    when T is bool:
+        if val.kind == DbValueKind.sqliteText:
+            return val.strVal.parseBool
+    val.intVal.T
 
 proc fromDbValue*(val: DbValue, T: typedesc[SomeFloat]): float64 = val.floatVal
 
@@ -145,7 +156,9 @@ proc fromDbValue*(val: DbValue, T: typedesc[seq[byte]]): seq[byte] = val.blobVal
 proc fromDbValue*(val: DbValue, T: typedesc[DbValue]): T = val
 
 proc fromDbValue*[T](val: DbValue, _: typedesc[Option[T]]): Option[T] =
-    if val.kind == sqliteNull:
+    if (val.kind == sqliteNull) or
+        (val.kind == sqliteText and val.strVal == "") or
+        (val.kind == sqliteInteger and val.intVal == 0):
         none(T)
     else:
         some(val.fromDbValue(T))
@@ -188,6 +201,7 @@ proc execMany*(db: DbConn, sql: string, params: seq[seq[DbValue]]) =
         db.exec(sql, p)
 ]#
 
+# Executes a non-query -- there are no results returned from the execution.
 proc execScript*(db: DbConn, sql: string) =
     ## Executes the query and raises SqliteError if not successful.
     assert (not db.isNil), "Database is nil"
@@ -211,7 +225,7 @@ template transaction*(db: DbConn, body: untyped) =
             db.exec("COMMIT")
 ]#
 
-proc readColumn(prepared: ptr PreparedSql, col: int32): DbValue =
+proc readColumn(prepared: ptr PreparedSql, col: int32): DbValue {.deprecated: "Use readDbColumn".} =
     let columnType = sqlite.column_type(prepared, col)
     case columnType
     of sqlite.SQLITE_INTEGER:
@@ -232,8 +246,33 @@ proc readColumn(prepared: ptr PreparedSql, col: int32): DbValue =
     else:
         raiseAssert "Unexpected column type: " & $columnType
 
+proc readDbColumn(prepared: ptr PreparedSql, col: int32): DbColumn =
+    let
+        columnType = sqlite.column_type(prepared, col)
+        # FIXME: This is NOT the correct way to get a string from a cstring and
+        # may result in loss of data after a NULL termination!
+        columnName = $sqlite.column_name(prepared, col)
+    case columnType
+    of sqlite.SQLITE_INTEGER:
+        result = DbColumn(name: columnName, val: toDbValue(sqlite.column_int64(prepared, col)))
+    of sqlite.SQLITE_FLOAT:
+        result = DbColumn(name: columnName, val: toDbValue(sqlite.column_double(prepared, col)))
+    of sqlite.SQLITE_TEXT:
+        result = DbColumn(name: columnName, val: toDbValue($sqlite.column_text(prepared, col)))
+    of sqlite.SQLITE_BLOB:
+        let blob = sqlite.column_blob(prepared, col)
+        let bytes = sqlite.column_bytes(prepared, col)
+        var s = newSeq[byte](bytes)
+        if bytes != 0:
+            copyMem(addr(s[0]), blob, bytes)
+        result = DbColumn(name: columnName, val: toDbValue(s))
+    of sqlite.SQLITE_NULL:
+        result = DbColumn(name: columnName, val: nilDbValue())
+    else:
+        raiseAssert "Unexpected column type: " & $columnType
+
 iterator rows*(db: DbConn, sql: string,
-               params: varargs[DbValue, toDbValue]): seq[DbValue] =
+               params: varargs[DbValue, toDbValue]): seq[DbValue] {.deprecated: "Use execQuery instead".} =
     ## Executes the query and iterates over the result dataset.
     assert (not db.isNil), "Database is nil"
     let prepared = db.prepareSql(sql, @params)
@@ -246,10 +285,25 @@ iterator rows*(db: DbConn, sql: string,
         yield row
 
 proc rows*(db: DbConn, sql: string,
-           params: varargs[DbValue, toDbValue]): seq[seq[DbValue]] =
+           params: varargs[DbValue, toDbValue]): seq[seq[DbValue]] {.deprecated: "Use execQuery instead".} =
     ## Executes the query and returns the resulting rows.
     for row in db.rows(sql, params):
         result.add row
+
+proc execQuery*[T](db: DbConn, sql: string,
+               params: varargs[DbValue, toDbValue]): seq[T] =
+    ## Executes the query and iterates over the result dataset.
+    assert (not db.isNil), "Database is nil"
+    let prepared = db.prepareSql(sql, @params)
+    defer: prepared.finalize()
+
+    var row = newSeq[DbColumn](sqlite.column_count(prepared))
+    while prepared.next:
+        for col, _ in row:
+            row[col] = readDbColumn(prepared, col.int32)
+        var r = T()
+        row.to(r)
+        result.add r 
 
 proc openDatabase*(path: string, mode = dbReadWrite): DbConn =
     ## Open a new database connection to a database file. To create a
@@ -307,3 +361,39 @@ proc isReadonly*(db: DbConn): bool =
     ## Returns true if ``db`` is in readonly mode.
     sqlite.db_readonly(db, "main") == 1
 ]#
+
+proc col*[T](row: DbRow, columnName: string): T =
+    let results = row.filter((column: DbColumn) => column.name == columnName)
+    if results.len == 0:
+        return default(T)
+    results[0].val.fromDbValue(T)
+
+template dbColumnName*(name: string) {.pragma.}
+    ## Specifies the database column name for the object property
+
+template enumInstanceDbColumns*(obj: auto,
+                                fieldNameVar, fieldVar,
+                                body: untyped) =
+    ## Expands a block over all serialized fields of an object.
+    ##
+    ## Inside the block body, the passed `fieldNameVar` identifier
+    ## will refer to the name of each field as a string. `fieldVar`
+    ## will refer to the field value.
+    ##
+    ## The order of visited fields matches the order of the fields in
+    ## the object definition.
+    type ObjType {.used.} = type(obj)
+
+    for fieldName, fieldVar in fieldPairs(obj):
+        when hasCustomPragmaFixed(ObjType, fieldName, dbColumnName):
+            const fieldNameVar = getCustomPragmaFixed(ObjType, fieldName, dbColumnName)
+        else:
+            const fieldNameVar = fieldName
+        body
+
+proc to*(row: DbRow, obj: var object) =
+    obj.enumInstanceDbColumns(dbColName, property):
+        type ColType = type property
+        property = col[ColType](row, dbColName)
+
+proc hasRows*(rows: seq[DbRow]): bool = rows.len > 0
