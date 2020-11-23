@@ -4,7 +4,7 @@ import std / [options, macros, typetraits], sugar, sequtils
 # To generate it use the `sqlite.nim` target of the Makefile in the same
 # directory as this file.
 from sqlcipher/sqlite as sqlite import nil
-from stew import hasCustomPragmaFixed, getCustomPragmaFixed
+from stew/shims/macros as stew_macros import hasCustomPragmaFixed, getCustomPragmaFixed
 
 # Adapted from https://github.com/GULPF/tiny_sqlite
 
@@ -402,5 +402,7 @@ template enumInstanceDbColumns*(obj: auto,
 
 proc to*(row: seq[DbColumn], obj: var object) =
     obj.enumInstanceDbColumns(dbColName, property):
-        type ColType = type colType
-        property = r.col(dbColName, colType)
+        type ColType = type property
+        property = row.col(dbColName, ColType)
+
+proc hasRows*(rows: seq[seq[DbColumn]]): bool = rows.len > 0
