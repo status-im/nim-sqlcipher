@@ -145,7 +145,9 @@ proc fromDbValue*(val: DbValue, T: typedesc[seq[byte]]): seq[byte] = val.blobVal
 proc fromDbValue*(val: DbValue, T: typedesc[DbValue]): T = val
 
 proc fromDbValue*[T](val: DbValue, _: typedesc[Option[T]]): Option[T] =
-    if val.kind == sqliteNull:
+    if (val.kind == sqliteNull) or
+        (val.kind == sqliteText and val.strVal == "") or
+        (val.kind == sqliteInteger and val.intVal == 0):
         none(T)
     else:
         some(val.fromDbValue(T))
