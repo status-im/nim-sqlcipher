@@ -51,6 +51,8 @@ type
     DbColumn* = object
         name*: string
         val*: DbValue
+    
+    DbRow* = seq[DbColumn]
 
     Tbind_destructor_func* = proc (para1: pointer){.cdecl, locks: 0, tags: [], raises: [], gcsafe.}
 
@@ -199,6 +201,7 @@ proc execMany*(db: DbConn, sql: string, params: seq[seq[DbValue]]) =
         db.exec(sql, p)
 ]#
 
+# Executes a non-query -- there are no results returned from the execution.
 proc execScript*(db: DbConn, sql: string) =
     ## Executes the query and raises SqliteError if not successful.
     assert (not db.isNil), "Database is nil"
@@ -269,7 +272,7 @@ proc readDbColumn(prepared: ptr PreparedSql, col: int32): DbColumn =
         raiseAssert "Unexpected column type: " & $columnType
 
 iterator rows*(db: DbConn, sql: string,
-               params: varargs[DbValue, toDbValue]): seq[DbValue] {.deprecated: "Use dbRows".} =
+               params: varargs[DbValue, toDbValue]): seq[DbValue] {.deprecated: "Use execQuery instead".} =
     ## Executes the query and iterates over the result dataset.
     assert (not db.isNil), "Database is nil"
     let prepared = db.prepareSql(sql, @params)
@@ -282,13 +285,13 @@ iterator rows*(db: DbConn, sql: string,
         yield row
 
 proc rows*(db: DbConn, sql: string,
-           params: varargs[DbValue, toDbValue]): seq[seq[DbValue]] {.deprecated: "Use dbRows".} =
+           params: varargs[DbValue, toDbValue]): seq[seq[DbValue]] {.deprecated: "Use execQuery instead".} =
     ## Executes the query and returns the resulting rows.
     for row in db.rows(sql, params):
         result.add row
 
-iterator dbRows*(db: DbConn, sql: string,
-               params: varargs[DbValue, toDbValue]): seq[DbColumn] =
+proc execQuery*[T](db: DbConn, sql: string,
+               params: varargs[DbValue, toDbValue]): seq[T] =
     ## Executes the query and iterates over the result dataset.
     assert (not db.isNil), "Database is nil"
     let prepared = db.prepareSql(sql, @params)
@@ -298,13 +301,9 @@ iterator dbRows*(db: DbConn, sql: string,
     while prepared.next:
         for col, _ in row:
             row[col] = readDbColumn(prepared, col.int32)
-        yield row
-
-proc dbRows*(db: DbConn, sql: string,
-           params: varargs[DbValue, toDbValue]): seq[seq[DbColumn]] =
-    ## Executes the query and returns the resulting rows.
-    for row in db.dbRows(sql, params):
-        result.add row
+        var r = T()
+        row.to(r)
+        result.add r 
 
 proc openDatabase*(path: string, mode = dbReadWrite): DbConn =
     ## Open a new database connection to a database file. To create a
@@ -363,7 +362,7 @@ proc isReadonly*(db: DbConn): bool =
     sqlite.db_readonly(db, "main") == 1
 ]#
 
-proc col*[T](row: seq[DbColumn], columnName: string, _: typedesc[T]): T =
+proc col*[T](row: DbRow, columnName: string, _: typedesc[T]): T =
     let results = row.filter((column: DbColumn) => column.name == columnName)
     if results.len == 0:
         return default(T)
@@ -382,15 +381,7 @@ template enumInstanceDbColumns*(obj: auto,
     ## will refer to the field value.
     ##
     ## The order of visited fields matches the order of the fields in
-    ## the object definition unless `serialziedFields` is used to specify
-    ## a different order. Fields marked with the `dontSerialize` pragma
-    ## are skipped.
-    ##
-    ## If the visited object is a case object, only the currently active
-    ## fields will be visited. During de-serialization, case discriminators
-    ## will be read first and the iteration will continue depending on the
-    ## value being deserialized.
-    ##
+    ## the object definition.
     type ObjType {.used.} = type(obj)
 
     for fieldName, fieldVar in fieldPairs(obj):
@@ -400,9 +391,9 @@ template enumInstanceDbColumns*(obj: auto,
             const fieldNameVar = fieldName
         body
 
-proc to*(row: seq[DbColumn], obj: var object) =
+proc to*(row: DbRow, obj: var object) =
     obj.enumInstanceDbColumns(dbColName, property):
         type ColType = type property
         property = row.col(dbColName, ColType)
 
-proc hasRows*(rows: seq[seq[DbColumn]]): bool = rows.len > 0
+proc hasRows*(rows: seq[DbRow]): bool = rows.len > 0
