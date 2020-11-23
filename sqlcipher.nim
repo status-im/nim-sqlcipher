@@ -134,7 +134,13 @@ proc nilDbValue(): DbValue =
     ## we use this internally.
     DbValue(kind: sqliteNull)
 
-proc fromDbValue*(val: DbValue, T: typedesc[Ordinal]): T = val.intval.T
+proc fromDbValue*(val: DbValue, T: typedesc[Ordinal]): T =
+    when T is bool:
+        if val.kind == DbValueKind.sqliteInteger:
+            return if val.intVal == 0: false else: true
+        elif val.kind == DbValueKind.sqliteText:
+            return val.strVal.parseBool
+    return val.intVal.T
 
 proc fromDbValue*(val: DbValue, T: typedesc[SomeFloat]): float64 = val.floatVal
 
