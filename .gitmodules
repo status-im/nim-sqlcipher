@@ -22,3 +22,6 @@
 [submodule "vendor/cligen"]
 	path = vendor/cligen
 	url = https://github.com/c-blake/cligen.git
+[submodule "vendor/nim-stew"]
+	path = vendor/nim-stew
+	url = https://github.com/status-im/nim-stew

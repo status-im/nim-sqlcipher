@@ -1,9 +1,10 @@
-import std / [options, macros, typetraits]
+import std / [options, macros, typetraits], sugar, sequtils
 
 # sqlcipher/sqlite.nim must be generated before this module can be used.
 # To generate it use the `sqlite.nim` target of the Makefile in the same
 # directory as this file.
 from sqlcipher/sqlite as sqlite import nil
+from stew import hasCustomPragmaFixed, getCustomPragmaFixed
 
 # Adapted from https://github.com/GULPF/tiny_sqlite
 
@@ -46,6 +47,10 @@ type
             blobVal*: seq[byte]
         of sqliteNull:
             discard
+
+    DbColumn* = object
+        name*: string
+        val*: DbValue
 
     Tbind_destructor_func* = proc (para1: pointer){.cdecl, locks: 0, tags: [], raises: [], gcsafe.}
 
@@ -217,7 +222,7 @@ template transaction*(db: DbConn, body: untyped) =
             db.exec("COMMIT")
 ]#
 
-proc readColumn(prepared: ptr PreparedSql, col: int32): DbValue =
+proc readColumn(prepared: ptr PreparedSql, col: int32): DbValue {.deprecated: "Use readDbColumn".} =
     let columnType = sqlite.column_type(prepared, col)
     case columnType
     of sqlite.SQLITE_INTEGER:
@@ -238,8 +243,33 @@ proc readColumn(prepared: ptr PreparedSql, col: int32): DbValue =
     else:
         raiseAssert "Unexpected column type: " & $columnType
 
+proc readDbColumn(prepared: ptr PreparedSql, col: int32): DbColumn =
+    let
+        columnType = sqlite.column_type(prepared, col)
+        # FIXME: This is NOT the correct way to get a string from a cstring and
+        # may result in loss of data after a NULL termination!
+        columnName = $sqlite.column_name(prepared, col)
+    case columnType
+    of sqlite.SQLITE_INTEGER:
+        result = DbColumn(name: columnName, val: toDbValue(sqlite.column_int64(prepared, col)))
+    of sqlite.SQLITE_FLOAT:
+        result = DbColumn(name: columnName, val: toDbValue(sqlite.column_double(prepared, col)))
+    of sqlite.SQLITE_TEXT:
+        result = DbColumn(name: columnName, val: toDbValue($sqlite.column_text(prepared, col)))
+    of sqlite.SQLITE_BLOB:
+        let blob = sqlite.column_blob(prepared, col)
+        let bytes = sqlite.column_bytes(prepared, col)
+        var s = newSeq[byte](bytes)
+        if bytes != 0:
+            copyMem(addr(s[0]), blob, bytes)
+        result = DbColumn(name: columnName, val: toDbValue(s))
+    of sqlite.SQLITE_NULL:
+        result = DbColumn(name: columnName, val: nilDbValue())
+    else:
+        raiseAssert "Unexpected column type: " & $columnType
+
 iterator rows*(db: DbConn, sql: string,
-               params: varargs[DbValue, toDbValue]): seq[DbValue] =
+               params: varargs[DbValue, toDbValue]): seq[DbValue] {.deprecated: "Use dbRows".} =
     ## Executes the query and iterates over the result dataset.
     assert (not db.isNil), "Database is nil"
     let prepared = db.prepareSql(sql, @params)
@@ -252,9 +282,28 @@ iterator rows*(db: DbConn, sql: string,
         yield row
 
 proc rows*(db: DbConn, sql: string,
-           params: varargs[DbValue, toDbValue]): seq[seq[DbValue]] =
+           params: varargs[DbValue, toDbValue]): seq[seq[DbValue]] {.deprecated: "Use dbRows".} =
     ## Executes the query and returns the resulting rows.
     for row in db.rows(sql, params):
+        result.add row
+
+iterator dbRows*(db: DbConn, sql: string,
+               params: varargs[DbValue, toDbValue]): seq[DbColumn] =
+    ## Executes the query and iterates over the result dataset.
+    assert (not db.isNil), "Database is nil"
+    let prepared = db.prepareSql(sql, @params)
+    defer: prepared.finalize()
+
+    var row = newSeq[DbColumn](sqlite.column_count(prepared))
+    while prepared.next:
+        for col, _ in row:
+            row[col] = readDbColumn(prepared, col.int32)
+        yield row
+
+proc dbRows*(db: DbConn, sql: string,
+           params: varargs[DbValue, toDbValue]): seq[seq[DbColumn]] =
+    ## Executes the query and returns the resulting rows.
+    for row in db.dbRows(sql, params):
         result.add row
 
 proc openDatabase*(path: string, mode = dbReadWrite): DbConn =
@@ -313,3 +362,45 @@ proc isReadonly*(db: DbConn): bool =
     ## Returns true if ``db`` is in readonly mode.
     sqlite.db_readonly(db, "main") == 1
 ]#
+
+proc col*[T](row: seq[DbColumn], columnName: string, _: typedesc[T]): T =
+    let results = row.filter((column: DbColumn) => column.name == columnName)
+    if results.len == 0:
+        return default(T)
+    results[0].val.fromDbValue(T)
+
+template dbColumnName*(name: string) {.pragma.}
+    ## Specifies the database column name for the object property
+
+template enumInstanceDbColumns*(obj: auto,
+                                fieldNameVar, fieldVar,
+                                body: untyped) =
+    ## Expands a block over all serialized fields of an object.
+    ##
+    ## Inside the block body, the passed `fieldNameVar` identifier
+    ## will refer to the name of each field as a string. `fieldVar`
+    ## will refer to the field value.
+    ##
+    ## The order of visited fields matches the order of the fields in
+    ## the object definition unless `serialziedFields` is used to specify
+    ## a different order. Fields marked with the `dontSerialize` pragma
+    ## are skipped.
+    ##
+    ## If the visited object is a case object, only the currently active
+    ## fields will be visited. During de-serialization, case discriminators
+    ## will be read first and the iteration will continue depending on the
+    ## value being deserialized.
+    ##
+    type ObjType {.used.} = type(obj)
+
+    for fieldName, fieldVar in fieldPairs(obj):
+        when hasCustomPragmaFixed(ObjType, fieldName, dbColumnName):
+            const fieldNameVar = getCustomPragmaFixed(ObjType, fieldName, dbColumnName)
+        else:
+            const fieldNameVar = fieldName
+        body
+
+proc to*(row: seq[DbColumn], obj: var object) =
+    obj.enumInstanceDbColumns(dbColName, property):
+        type ColType = type colType
+        property = r.col(dbColName, colType)
