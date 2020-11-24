@@ -362,7 +362,7 @@ proc isReadonly*(db: DbConn): bool =
     sqlite.db_readonly(db, "main") == 1
 ]#
 
-proc col*[T](row: DbRow, columnName: string, _: typedesc[T]): T =
+proc col*[T](row: DbRow, columnName: string): T =
     let results = row.filter((column: DbColumn) => column.name == columnName)
     if results.len == 0:
         return default(T)
@@ -394,6 +394,6 @@ template enumInstanceDbColumns*(obj: auto,
 proc to*(row: DbRow, obj: var object) =
     obj.enumInstanceDbColumns(dbColName, property):
         type ColType = type property
-        property = row.col(dbColName, ColType)
+        property = col[ColType](row, dbColName)
 
 proc hasRows*(rows: seq[DbRow]): bool = rows.len > 0
