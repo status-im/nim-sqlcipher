@@ -35,9 +35,9 @@ jobs:
             include: ,
             lib: ,
           }
-        sqlite:  [ true, false ]
-        openssl: [ true, false ]
-    name: ${{ matrix.platform.icon }} - SQLITE ${{ matrix.sqlite }} | SSL ${{ matrix.openssl }}
+        sqlcipher: [ true, false ]
+        openssl:   [ true, false ]
+    name: ${{ matrix.platform.icon }} - SQLCIPHER ${{ matrix.sqlcipher }} | SSL ${{ matrix.openssl }}
     runs-on: ${{ matrix.platform.os }}-latest
     defaults:
       run:
@@ -77,11 +77,11 @@ jobs:
           make -j${NPROC} NIMFLAGS="--parallelBuild:${NPROC}" V=1 update
           make -j${NPROC} NIMFLAGS="--parallelBuild:${NPROC}" V=1 deps
 
-      - name: Build the sqlite.nim wrapper and run tests
+      - name: Build libsqlcipher and run tests
         run: |
           make -j${NPROC} \
             NIMFLAGS="--parallelBuild:${NPROC}" \
-            SQLITE_STATIC=${{ matrix.sqlite }} \
+            SQLCIPHER_STATIC=${{ matrix.sqlcipher }} \
             SSL_INCLUDE_DIR="${{ matrix.platform.include }}" \
             SSL_LIB_DIR="${{ matrix.platform.lib }}" \
             SSL_STATIC=${{ matrix.openssl }} \
