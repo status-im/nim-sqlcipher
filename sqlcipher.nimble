@@ -31,6 +31,7 @@ proc buildAndRunTest(name: string,
     (if getEnv("SSL_STATIC").strip != "false": " --dynlibOverride:ssl" else: "") &
     " --nimcache:nimcache/test/" & name &
     " --out:" & outDir & name &
+    (if getEnv("SQLCIPHER_LDFLAGS").strip != "": " --passL:\"" & getEnv("SQLCIPHER_LDFLAGS") & "\"" else: "") &
     (if getEnv("SSL_LDFLAGS").strip != "": " --passL:\"" & getEnv("SSL_LDFLAGS") & "\"" else: "") &
     " --threads:on" &
     " --tlsEmulation:off" &

@@ -3,8 +3,8 @@
 .vscode
 /generator/*
 !/generator/generate.nim
+/lib
 /nimcache
-/sqlcipher
 /sqlite
 /test/build
 /update
