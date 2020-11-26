@@ -1,4 +1,4 @@
-import std / [options, macros, typetraits], sugar, sequtils
+import std / [options, macros, typetraits], sugar, sequtils, unicode
 
 # sqlcipher/sqlite.nim must be generated before this module can be used.
 # To generate it use the `sqlite.nim` target of the Makefile in the same
@@ -186,7 +186,8 @@ proc `$`*(dbVal: DbValue): string =
 ]#
 
 proc exec*(db: DbConn, sql: string, params: varargs[DbValue, toDbValue]) =
-    ## Executes ``sql`` and raises SqliteError if not successful.
+    ## Executes the non-query ``sql`` and raises SqliteError if not successful.
+    ## There are no results returned from the execution.
     assert (not db.isNil), "Database is nil"
     let prepared = db.prepareSql(sql, @params)
     defer: prepared.finalize()
@@ -201,9 +202,9 @@ proc execMany*(db: DbConn, sql: string, params: seq[seq[DbValue]]) =
         db.exec(sql, p)
 ]#
 
-# Executes a non-query -- there are no results returned from the execution.
 proc execScript*(db: DbConn, sql: string) =
-    ## Executes the query and raises SqliteError if not successful.
+    ## Executes the non-query ``sql`` and raises SqliteError if not successful.
+    ## There are no parameters and no results returned from the execution.
     assert (not db.isNil), "Database is nil"
     let rc = sqlite.exec(db, sql.cstring, nil, nil, nil)
     db.checkRc(rc)
@@ -368,8 +369,30 @@ proc col*[T](row: DbRow, columnName: string): T =
         return default(T)
     results[0].val.fromDbValue(T)
 
+# TODO: add primaryKey param to pragma, however there is an issue with multiple
+# params in getCustomPragmaFixed: https://github.com/status-im/nim-stew/issues/62,
+# and we need to wait on a fix or a workaround.
 template dbColumnName*(name: string) {.pragma.}
     ## Specifies the database column name for the object property
+
+template dbTableName*(name: string) {.pragma.}
+    ## Specifies the database table name for the object
+
+template dbForeignKey*(t: typedesc) {.pragma.}
+    ## Specifies the table's foreign key type
+
+template columnName*(obj: auto | typedesc): string =
+    when macros.hasCustomPragma(obj, dbColumnName):
+        macros.getCustomPragmaVal(obj, dbColumnName)
+    else:
+        typetraits.name(obj.type).toLower
+
+template tableName*(obj: auto | typedesc): string =
+    when macros.hasCustomPragma(obj, dbTableName):
+        macros.getCustomPragmaVal(obj, dbTableName)
+    else:
+        typetraits.name(obj.type).toLower
+
 
 template enumInstanceDbColumns*(obj: auto,
                                 fieldNameVar, fieldVar,
