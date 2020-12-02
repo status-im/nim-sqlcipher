@@ -2,7 +2,7 @@
 ## https://github.com/jackhftang/lrucache.nim.
 
 import std / [lists, tables]
-from sqlite_wrapper as sqlite import nil
+from ../sqlite_wrapper as sqlite import nil
 
 type
   Node = object

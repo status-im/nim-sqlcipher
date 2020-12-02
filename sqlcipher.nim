@@ -1,9 +1,9 @@
 import std / [options, macros, typetraits], sugar, sequtils, unicode
 
-from sqlite_wrapper as sqlite import nil
+from sqlcipher/sqlite_wrapper as sqlite import nil
 from stew/shims/macros as stew_macros import hasCustomPragmaFixed, getCustomPragmaFixed
 
-import stmtcache
+import sqlcipher/private/stmtcache
 
 # Adapted from https://github.com/GULPF/tiny_sqlite
 

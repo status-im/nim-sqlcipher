@@ -4,7 +4,6 @@
 /generator/*
 !/generator/generate.nim
 /nimcache
-/sqlcipher
 /sqlite
 /test/build
 /update
