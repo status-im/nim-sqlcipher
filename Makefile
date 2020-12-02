@@ -17,6 +17,7 @@ BUILD_SYSTEM_DIR := vendor/nimbus-build-system
 	all \
 	clean \
 	clean-build-dirs \
+	clean-sqlcipher \
 	deps \
 	sqlcipher \
 	sqlite3.c \
@@ -52,13 +53,20 @@ else
  detected_OS := $(strip $(shell uname))
 endif
 
-clean: | clean-common clean-build-dirs
+clean: | clean-common clean-build-dirs clean-sqlcipher
 
 clean-build-dirs:
 	rm -rf \
 		lib \
 		sqlite \
 		test/build
+
+clean-sqlcipher:
+	cd vendor/sqlcipher && git clean -dfx $(HANDLE_OUTPUT)
+	([[ $(detected_OS) = Windows ]] && \
+		cd vendor/sqlcipher && \
+		git stash $(HANDLE_OUTPUT) && \
+		git stash drop $(HANDLE_OUTPUT)) || true
 
 deps: | deps-common
 
@@ -117,11 +125,7 @@ $(SQLITE3_C): | deps
 		vendor/sqlcipher/sqlite3.c \
 		vendor/sqlcipher/sqlite3.h \
 		sqlite/
-	cd vendor/sqlcipher && git clean -dfx $(HANDLE_OUTPUT)
-	([[ $(detected_OS) = Windows ]] && \
-		cd vendor/sqlcipher && \
-		git stash $(HANDLE_OUTPUT) && \
-		git stash drop $(HANDLE_OUTPUT)) || true
+	$(MAKE) clean-sqlcipher
 
 sqlite3.c: $(SQLITE3_C)
 
