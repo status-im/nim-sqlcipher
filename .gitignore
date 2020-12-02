@@ -3,6 +3,7 @@
 .vscode
 /generator/*
 !/generator/generate.nim
+/lib
 /nimcache
 /sqlite
 /test/build

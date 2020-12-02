@@ -17,14 +17,10 @@ BUILD_SYSTEM_DIR := vendor/nimbus-build-system
 	all \
 	clean \
 	clean-build-dirs \
-	clean-generator \
-	clean-nimterop \
 	deps \
-	sqlite \
-	sqlite.nim \
+	sqlcipher \
 	sqlite3.c \
 	test \
-	toast \
 	update
 
 ifeq ($(NIM_PARAMS),)
@@ -42,7 +38,7 @@ GIT_SUBMODULE_UPDATE := git submodule update --init --recursive
 
 else # "variables.mk" was included. Business as usual until the end of this file.
 
-all: sqlite.nim
+all: sqlcipher
 
 # must be included after the default target
 -include $(BUILD_SYSTEM_DIR)/makefiles/targets.mk
@@ -56,24 +52,13 @@ else
  detected_OS := $(strip $(shell uname))
 endif
 
-clean: | clean-common clean-build-dirs clean-generator clean-nimterop
+clean: | clean-common clean-build-dirs
 
 clean-build-dirs:
 	rm -rf \
-		sqlcipher \
+		lib \
 		sqlite \
 		test/build
-
-clean-generator:
-	rm -rf \
-		generator/generate \
-		generator/generate.exe \
-		generator/generate.dSYM
-
-clean-nimterop:
-	rm -rf \
-		$(NIMTEROP_TOAST) \
-		$(NIMTEROP_TOAST).dSYM
 
 deps: | deps-common
 
@@ -105,14 +90,14 @@ else
  SSL_LDFLAGS_SQLITE3_C ?= -L$(SSL_LIB_DIR) $(SSL_LDFLAGS)
 endif
 
-SQLITE_STATIC ?= true
-SQLITE_CDEFS ?= -DSQLITE_HAS_CODEC -DSQLITE_TEMP_STORE=3
-SQLITE_CFLAGS ?= -I$(SSL_INCLUDE_DIR) -pthread
-ifndef SQLITE_LDFLAGS
+SQLCIPHER_STATIC ?= true
+SQLCIPHER_CDEFS ?= -DSQLITE_HAS_CODEC -DSQLITE_TEMP_STORE=3
+SQLCIPHER_CFLAGS ?= -I$(SSL_INCLUDE_DIR) -pthread
+ifndef SQLCIPHER_LDFLAGS
  ifeq ($(detected_OS),Windows)
-  SQLITE_LDFLAGS := -lwinpthread
+  SQLCIPHER_LDFLAGS := -lwinpthread
  else
-  SQLITE_LDFLAGS := -lpthread
+  SQLCIPHER_LDFLAGS := -lpthread
  endif
 endif
 
@@ -124,8 +109,8 @@ $(SQLITE3_C): | deps
 	+ mkdir -p sqlite
 	cd vendor/sqlcipher && \
 		./configure \
-			CFLAGS="$(SQLITE_CDEFS) $(SQLITE_CFLAGS)" \
-			LDFLAGS="$(SQLITE_LDFLAGS) $(SSL_LDFLAGS_SQLITE3_C)" \
+			CFLAGS="$(SQLCIPHER_CDEFS) $(SQLCIPHER_CFLAGS)" \
+			LDFLAGS="$(SQLCIPHER_LDFLAGS) $(SSL_LDFLAGS_SQLITE3_C)" \
 			$(HANDLE_OUTPUT)
 	cd vendor/sqlcipher && $(MAKE) sqlite3.c $(HANDLE_OUTPUT)
 	cp \
@@ -140,19 +125,19 @@ $(SQLITE3_C): | deps
 
 sqlite3.c: $(SQLITE3_C)
 
-SQLITE_STATIC_LIB ?= $(shell pwd)/sqlcipher/sqlcipher.a
-SQLITE_STATIC_OBJ ?= sqlcipher/sqlcipher.o
+SQLCIPHER_STATIC_LIB ?= $(shell pwd)/lib/sqlcipher.a
+SQLCIPHER_STATIC_OBJ ?= lib/sqlcipher.o
 
-$(SQLITE_STATIC_LIB): $(SQLITE3_C)
+$(SQLCIPHER_STATIC_LIB): $(SQLITE3_C)
 	echo -e $(BUILD_MSG) "SQLCipher static library"
 	+ mkdir -p sqlcipher
 	$(ENV_SCRIPT) $(CC) \
-		$(SQLITE_CDEFS) \
-		$(SQLITE_CFLAGS) \
+		$(SQLCIPHER_CDEFS) \
+		$(SQLCIPHER_CFLAGS) \
 		$(SQLITE3_C) \
 		-c \
-		-o $(SQLITE_STATIC_OBJ) $(HANDLE_OUTPUT)
-	$(ENV_SCRIPT) ar rcs $(SQLITE_STATIC_LIB) $(SQLITE_STATIC_OBJ) $(HANDLE_OUTPUT)
+		-o $(SQLCIPHER_STATIC_OBJ) $(HANDLE_OUTPUT)
+	$(ENV_SCRIPT) ar rcs $(SQLCIPHER_STATIC_LIB) $(SQLCIPHER_STATIC_OBJ) $(HANDLE_OUTPUT)
 
 ifndef SHARED_LIB_EXT
  ifeq ($(detected_OS),macOS)
@@ -164,7 +149,7 @@ ifndef SHARED_LIB_EXT
  endif
 endif
 
-SQLITE_SHARED_LIB ?= $(shell pwd)/sqlcipher/libsqlcipher.$(SHARED_LIB_EXT)
+SQLCIPHER_SHARED_LIB ?= $(shell pwd)/lib/libsqlcipher.$(SHARED_LIB_EXT)
 
 ifndef PLATFORM_FLAGS_SHARED_LIB
  ifeq ($(detected_OS),macOS)
@@ -174,73 +159,36 @@ ifndef PLATFORM_FLAGS_SHARED_LIB
  endif
 endif
 
-$(SQLITE_SHARED_LIB): $(SQLITE3_C)
+$(SQLCIPHER_SHARED_LIB): $(SQLITE3_C)
 	echo -e $(BUILD_MSG) "SQLCipher shared library"
 	+ mkdir -p sqlcipher
 	$(ENV_SCRIPT) $(CC) \
-		$(SQLITE_CDEFS) \
-		$(SQLITE_CFLAGS) \
+		$(SQLCIPHER_CDEFS) \
+		$(SQLCIPHER_CFLAGS) \
 		$(SQLITE3_C) \
-		$(SQLITE_LDFLAGS) \
+		$(SQLCIPHER_LDFLAGS) \
 		$(SSL_LDFLAGS) \
 		$(PLATFORM_FLAGS_SHARED_LIB) \
-		-o $(SQLITE_SHARED_LIB) $(HANDLE_OUTPUT)
+		-o $(SQLCIPHER_SHARED_LIB) $(HANDLE_OUTPUT)
 
-ifndef SQLITE_LIB
- ifneq ($(SQLITE_STATIC),false)
-  SQLITE_LIB := $(SQLITE_STATIC_LIB)
+ifndef SQLCIPHER_LIB
+ ifneq ($(SQLCIPHER_STATIC),false)
+  SQLCIPHER_LIB := $(SQLCIPHER_STATIC_LIB)
  else
-  SQLITE_LIB := $(SQLITE_SHARED_LIB)
+  SQLCIPHER_LIB := $(SQLCIPHER_SHARED_LIB)
  endif
 endif
 
-sqlite: $(SQLITE_LIB)
-
-ifndef NIMTEROP_TOAST
- ifeq ($(detected_OS),Windows)
-  NIMTEROP_TOAST := vendor/nimterop/nimterop/toast.exe
- else
-  NIMTEROP_TOAST := vendor/nimterop/nimterop/toast
- endif
-endif
-
-$(NIMTEROP_TOAST): | deps
-	echo -e $(BUILD_MSG) "Nimterop toast"
-	+ cd vendor/nimterop && \
-		$(ENV_SCRIPT) nim c $(NIM_PARAMS) \
-			--define:danger \
-			--hints:off \
-			--nimcache:../../nimcache/nimterop \
-			nimterop/toast.nim
-	rm -rf $(NIMTEROP_TOAST).dSYM
-
-toast: $(NIMTEROP_TOAST)
-
-SQLITE_NIM ?= sqlcipher/sqlite.nim
-
-$(SQLITE_NIM): $(NIMTEROP_TOAST) $(SQLITE_LIB)
-	echo -e $(BUILD_MSG) "Nim wrapper for SQLCipher"
-	+ mkdir -p sqlcipher
-	SQLITE_CDEFS="$(SQLITE_CDEFS)" \
-	SQLITE_STATIC="$(SQLITE_STATIC)" \
-	SQLITE3_H="$(SQLITE3_H)" \
-	SQLITE_LIB="$(SQLITE_LIB)" \
-	$(ENV_SCRIPT) nim c $(NIM_PARAMS) \
-		--nimcache:nimcache/sqlcipher \
-		--verbosity:0 \
-		generator/generate.nim > $(SQLITE_NIM) 2> /dev/null
-	$(MAKE) clean-generator
-
-sqlite.nim: $(SQLITE_NIM)
+sqlcipher: $(SQLCIPHER_LIB)
 
 # LD_LIBRARY_PATH is supplied when running tests on Linux
 # PATH is supplied when running tests on Windows
-ifeq ($(SQLITE_STATIC),false)
- PATH_TEST ?= $(shell dirname $(SQLITE_SHARED_LIB))::$${PATH}
+ifeq ($(SQLCIPHER_STATIC),false)
+ PATH_TEST ?= $(shell dirname $(SQLCIPHER_LIB))::$${PATH}
  ifeq ($(SSL_STATIC),false)
-  LD_LIBRARY_PATH_TEST ?= $(shell dirname $(SQLITE_SHARED_LIB)):$(SSL_LIB_DIR)$${LD_LIBRARY_PATH:+:$${LD_LIBRARY_PATH}}
+  LD_LIBRARY_PATH_TEST ?= $(shell dirname $(SQLCIPHER_SHARED_LIB)):$(SSL_LIB_DIR)$${LD_LIBRARY_PATH:+:$${LD_LIBRARY_PATH}}
  else
-  LD_LIBRARY_PATH_TEST ?= $(shell dirname $(SQLITE_SHARED_LIB))$${LD_LIBRARY_PATH:+:$${LD_LIBRARY_PATH}}
+  LD_LIBRARY_PATH_TEST ?= $(shell dirname $(SQLCIPHER_SHARED_LIB))$${LD_LIBRARY_PATH:+:$${LD_LIBRARY_PATH}}
  endif
 else
  PATH_TEST ?= $${PATH}
@@ -251,18 +199,24 @@ else
  endif
 endif
 
-test: $(SQLITE_NIM)
+test: $(SQLCIPHER_LIB)
 ifeq ($(detected_OS),macOS)
+	SQLCIPHER_LDFLAGS="$(SQLCIPHER_LDFLAGS)" \
+	SQLCIPHER_STATIC="$(SQLCIPHER_STATIC)" \
 	SSL_LDFLAGS="$(SSL_LDFLAGS)" \
 	SSL_STATIC="$(SSL_STATIC)" \
 	$(ENV_SCRIPT) nimble tests
 else ifeq ($(detected_OS),Windows)
 	PATH="$(PATH_TEST)" \
+	SQLCIPHER_LDFLAGS="$(SQLCIPHER_LDFLAGS)" \
+	SQLCIPHER_STATIC="$(SQLCIPHER_STATIC)" \
 	SSL_LDFLAGS="$(SSL_LDFLAGS)" \
 	SSL_STATIC="$(SSL_STATIC)" \
 	$(ENV_SCRIPT) nimble tests
 else
 	LD_LIBRARY_PATH="$(LD_LIBRARY_PATH_TEST)" \
+	SQLCIPHER_LDFLAGS="$(SQLCIPHER_LDFLAGS)" \
+	SQLCIPHER_STATIC="$(SQLCIPHER_STATIC)" \
 	SSL_LDFLAGS="$(SSL_LDFLAGS)" \
 	SSL_STATIC="$(SSL_STATIC)" \
 	$(ENV_SCRIPT) nimble tests
