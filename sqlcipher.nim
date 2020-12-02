@@ -176,9 +176,9 @@ proc toDbValues*(values: varargs[DbValue, toDbValue]): seq[DbValue] =
 
 proc fromDbValue*(value: DbValue, T: typedesc[Ordinal]): T =
     # Convert a DbValue to an ordinal.
-    when T is bool:
-        if value.kind == DbValueKind.sqliteText:
-            return value.strVal.parseBool
+    # when T is bool:
+    #     if value.kind == DbValueKind.sqliteText:
+    #         return value.strVal.parseBool
     value.intVal.T
 
 proc fromDbValue*(value: DbValue, T: typedesc[SomeFloat]): float64 =
@@ -195,9 +195,9 @@ proc fromDbValue*(value: DbValue, T: typedesc[seq[byte]]): seq[byte] =
 
 proc fromDbValue*[T](value: DbValue, _: typedesc[Option[T]]): Option[T] =
     ## Convert a DbValue to an optional value.
-    if (value.kind == sqliteNull) or
-        (value.kind == sqliteText and value.strVal == "") or
-        (value.kind == sqliteInteger and value.intVal == 0):
+    if (value.kind == sqliteNull): # or
+        # (value.kind == sqliteText and value.strVal == "") or
+        # (value.kind == sqliteInteger and value.intVal == 0):
         none(T)
     else:
         some(value.fromDbValue(T))
