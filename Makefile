@@ -134,7 +134,7 @@ SQLCIPHER_STATIC_OBJ ?= lib/sqlcipher.o
 
 $(SQLCIPHER_STATIC_LIB): $(SQLITE3_C)
 	echo -e $(BUILD_MSG) "SQLCipher static library"
-	+ mkdir -p sqlcipher
+	+ mkdir -p lib
 	$(ENV_SCRIPT) $(CC) \
 		$(SQLCIPHER_CDEFS) \
 		$(SQLCIPHER_CFLAGS) \
@@ -165,7 +165,7 @@ endif
 
 $(SQLCIPHER_SHARED_LIB): $(SQLITE3_C)
 	echo -e $(BUILD_MSG) "SQLCipher shared library"
-	+ mkdir -p sqlcipher
+	+ mkdir -p lib
 	$(ENV_SCRIPT) $(CC) \
 		$(SQLCIPHER_CDEFS) \
 		$(SQLCIPHER_CFLAGS) \
