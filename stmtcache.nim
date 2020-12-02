@@ -9,7 +9,7 @@ type
     key: string
     val: sqlite.Stmt
 
-  StmtCache* = object 
+  StmtCache* = object
     capacity: int
     list: DoublyLinkedList[Node]
     table: Table[string, DoublyLinkedNode[Node]]
@@ -29,11 +29,11 @@ proc resize(cache: var StmtCache) =
     discard sqlite.finalize(t.value.val)
     cache.list.remove t
 
-proc capacity*(cache: StmtCache): int = 
+proc capacity*(cache: StmtCache): int =
   ## Get the maximum capacity of cache
   cache.capacity
 
-proc len*(cache: StmtCache): int = 
+proc len*(cache: StmtCache): int =
   ## Return number of keys in cache
   cache.table.len
 
@@ -66,12 +66,12 @@ proc `[]=`*(cache: var StmtCache, key: string, val: sqlite.Stmt) =
     cache.list.prepend node
     cache.resize()
   else:
-    # set value 
+    # set value
     node.value.val = val
     # move to head
     cache.list.remove node
     cache.list.prepend node
-    
+
 proc getOrDefault*(cache: StmtCache, key: string, val: sqlite.Stmt = nil): sqlite.Stmt =
   ## Similar to get, but return `val` if `key` is not in `cache`
   let node = cache.table.getOrDefault(key, nil)

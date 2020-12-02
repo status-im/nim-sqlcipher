@@ -16,7 +16,7 @@ when not declared(tupleLen):
 export options.get, options.isSome, options.isNone
 
 type
-    DbConnImpl = ref object 
+    DbConnImpl = ref object
         handle: sqlite.Sqlite3 ## The underlying SQLite3 handle
         cache: StmtCache
 
@@ -60,7 +60,7 @@ type
             discard
 
     Rc = cint
-    
+
     ResultRow* = object
         values: seq[DbValue]
         columns: seq[string]
@@ -171,7 +171,7 @@ proc toDbValue*[T: type(nil)](val: T): DbValue =
 proc toDbValues*(values: varargs[DbValue, toDbValue]): seq[DbValue] =
     ## Convert several values to a sequence of DbValue's.
     runnableExamples:
-        doAssert toDbValues("string", 23) == @[toDbValue("string"), toDbValue(23)] 
+        doAssert toDbValues("string", 23) == @[toDbValue("string"), toDbValue(23)]
     @values
 
 proc fromDbValue*(value: DbValue, T: typedesc[Ordinal]): T =
@@ -207,9 +207,9 @@ proc fromDbValue*(value: DbValue, T: typedesc[DbValue]): T =
     ## The purpose of this overload is to do partial unpacking.
     ## For example, if the type of one column in a result row is unknown,
     ## the DbValue type can be kept just for that column.
-    ## 
+    ##
     ## .. code-block:: nim
-    ## 
+    ##
     ##   for row in db.iterate("SELECT name, extra FROM Person"):
     ##       # Type of 'extra' is unknown, so we don't unpack it.
     ##       # The 'extra' variable will be of type 'DbValue'
@@ -244,7 +244,7 @@ proc `==`*(a, b: DbValue): bool =
 
 proc bindParams(db: DbConn, stmtHandle: sqlite.Stmt, params: varargs[DbValue]): Rc =
     result = sqlite.SQLITE_OK
-    let expectedParamsLen = sqlite.bind_parameter_count(stmtHandle) 
+    let expectedParamsLen = sqlite.bind_parameter_count(stmtHandle)
     if expectedParamsLen != params.len:
         raise newSqliteError("SQL statement contains " & $expectedParamsLen &
             " parameters but only " & $params.len & " was provided.")
@@ -259,7 +259,7 @@ proc bindParams(db: DbConn, stmtHandle: sqlite.Stmt, params: varargs[DbValue]): 
                 sqlite.bind_int64(stmtHandle, idx, value.intval)
             of sqliteReal:
                 sqlite.bind_double(stmtHandle, idx, value.floatVal)
-            of sqliteText:   
+            of sqliteText:
                 sqlite.bind_text(stmtHandle, idx, value.strVal.cstring, value.strVal.len.int32, sqlite.SQLITE_TRANSIENT)
             of sqliteBlob:
                 sqlite.bind_blob(stmtHandle, idx.int32, cast[string](value.blobVal).cstring,
@@ -527,7 +527,7 @@ proc stmt*(db: DbConn, sql: string): SqlStatement =
     assertCanUseDb db
     let handle = prepareSql(db, sql)
     SqlStatementImpl(handle: handle, db: db).SqlStatement
-    
+
 proc exec*(statement: SqlStatement, params: varargs[DbValue, toDbValue]) =
     ## Executes `statement` with `params` as parameters.
     assertCanUseStatement statement
@@ -586,7 +586,7 @@ proc one*(statement: SqlStatement,
 
 proc value*(statement: SqlStatement,
         params: varargs[DbValue, toDbValue]): Option[DbValue] =
-    ## Executes `statement` and returns the first column of the first row found. 
+    ## Executes `statement` and returns the first column of the first row found.
     ## Returns `none(DbValue)` if no result was found.
     assertCanUseStatement statement
     for row in statement.iterate(params):
@@ -737,7 +737,7 @@ proc unpack*(row: ResultRow, obj: var object) =
 proc rows*(db: DbConn, sql: string, params: varargs[DbValue, toDbValue]): seq[seq[DbValue]]
         {.deprecated: "use 'all' instead".} =
     db.all(sql, params).mapIt(it.values)
-    
+
 iterator rows*(db: DbConn, sql: string, params: varargs[DbValue, toDbValue]): seq[DbValue]
         {.deprecated: "use 'iterate' instead".} =
     for row in db.all(sql, params):

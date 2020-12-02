@@ -96,7 +96,7 @@ const
   SQLITE_ALTER_TABLE* = 26.cint
   SQLITE_REINDEX* = 27.cint
   SQLITE_DENY* = 1.cint
-  SQLITE_IGNORE* = 2.cint 
+  SQLITE_IGNORE* = 2.cint
   SQLITE_DETERMINISTIC* = 0x800.cint
 
 const
@@ -265,8 +265,8 @@ proc stmt_busy*(stmt: Stmt): bool
 proc key*(db: Sqlite3, pKey: pointer, nKey: cint): cint {.importc: "sqlite3_key",
     cdecl, dynlib: Lib.}
   ## ```
-  ##   BEGIN SQLCIPHER 
-  ##     
+  ##   BEGIN SQLCIPHER
+  ##
   ##  * Specify the key for an encrypted database.  This routine should be
   ##  * called right after sqlite3_open().
   ##  *
