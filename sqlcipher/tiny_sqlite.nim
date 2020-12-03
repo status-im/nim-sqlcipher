@@ -162,11 +162,9 @@ proc toDbValue*[T: seq[byte]](val: T): DbValue =
 
 proc toDbValue*[T: Option](val: T): DbValue =
     ## Convert an optional value to a DbValue.
-    debugEcho ">>> [tiny_sqlite.toDbValue Option[T]] val.isNone: ", val.isNone
     if val.isNone:
         DbValue(kind: sqliteNull)
     else:
-        debugEcho ">>> [tiny_sqlite.toDbValue Option[T]] val.get: ", $val.get
         toDbValue(val.get)
 
 proc toDbValue*[T: type(nil)](val: T): DbValue =
@@ -197,7 +195,6 @@ proc fromDbValue*(value: DbValue, T: typedesc[seq[byte]]): seq[byte] =
 
 proc fromDbValue*[T](value: DbValue, _: typedesc[Option[T]]): Option[T] =
     ## Convert a DbValue to an optional value.
-    debugEcho ">>> [tiny_sqlite.fromDbValue Option[T]] value: ", $value
     if (value.kind == sqliteNull):
         none(T)
     else:
