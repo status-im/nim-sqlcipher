@@ -129,7 +129,7 @@ $(SQLITE3_C): | deps
 
 sqlite3.c: $(SQLITE3_C)
 
-SQLCIPHER_STATIC_LIB ?= $(shell pwd)/lib/sqlcipher.a
+SQLCIPHER_STATIC_LIB ?= $(shell pwd)/lib/libsqlcipher.a
 SQLCIPHER_STATIC_OBJ ?= lib/sqlcipher.o
 
 $(SQLCIPHER_STATIC_LIB): $(SQLITE3_C)
