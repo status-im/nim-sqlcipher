@@ -190,9 +190,9 @@ sqlcipher: $(SQLCIPHER_LIB)
 ifeq ($(SQLCIPHER_STATIC),false)
  PATH_TEST ?= $(shell dirname $(SQLCIPHER_LIB))::$${PATH}
  ifeq ($(SSL_STATIC),false)
-  LD_LIBRARY_PATH_TEST ?= $(shell dirname $(SQLCIPHER_SHARED_LIB)):$(SSL_LIB_DIR)$${LD_LIBRARY_PATH:+:$${LD_LIBRARY_PATH}}
+  LD_LIBRARY_PATH_TEST ?= $(shell dirname $(SQLCIPHER_LIB)):$(SSL_LIB_DIR)$${LD_LIBRARY_PATH:+:$${LD_LIBRARY_PATH}}
  else
-  LD_LIBRARY_PATH_TEST ?= $(shell dirname $(SQLCIPHER_SHARED_LIB))$${LD_LIBRARY_PATH:+:$${LD_LIBRARY_PATH}}
+  LD_LIBRARY_PATH_TEST ?= $(shell dirname $(SQLCIPHER_LIB))$${LD_LIBRARY_PATH:+:$${LD_LIBRARY_PATH}}
  endif
 else
  PATH_TEST ?= $${PATH}
