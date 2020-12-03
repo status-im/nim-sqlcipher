@@ -250,22 +250,43 @@ proc stmt_busy*(stmt: Stmt): bool
 
 proc key*(db: Sqlite3, pKey: pointer, nKey: cint): cint {.importc: "sqlite3_key",
     cdecl.}
-  ## ```
-  ##   BEGIN SQLCIPHER
-  ##
-  ##  * Specify the key for an encrypted database.  This routine should be
-  ##  * called right after sqlite3_open().
-  ##  *
-  ##  * The code to implement this API is not available in the public release
-  ##  * of SQLite.
-  ## ```
+    ## ```
+    ##   BEGIN SQLCIPHER
+    ##
+    ##  * Specify the key for an encrypted database.  This routine should be
+    ##  * called right after sqlite3_open().
+    ##  *
+    ##  * The code to implement this API is not available in the public release
+    ##  * of SQLite.
+    ## ```
+proc key_v2*(db: Sqlite3; zDbName: cstring; pKey: pointer; nKey: cint): cint {.
+    importc: "sqlite3_key_v2", cdecl.}
+    ## ```
+    ##   BEGIN SQLCIPHER 
+    ##     
+    ##  * Specify the key for an encrypted database.  This routine should be
+    ##  * called right after sqlite3_open().
+    ##  *
+    ##  * The code to implement this API is not available in the public release
+    ##  * of SQLite.
+    ## ```
 proc rekey*(db: Sqlite3, pKey: pointer, nKey: cint): cint {.importc: "sqlite3_rekey",
     cdecl.}
-  ## ```
-  ##   * Change the key on an open database.  If the current database is not
-  ##  * encrypted, this routine will encrypt it.  If pNew==0 or nNew==0, the
-  ##  * database is decrypted.
-  ##  *
-  ##  * The code to implement this API is not available in the public release
-  ##  * of SQLite.
-  ## ```
+    ## ```
+    ##   * Change the key on an open database.  If the current database is not
+    ##  * encrypted, this routine will encrypt it.  If pNew==0 or nNew==0, the
+    ##  * database is decrypted.
+    ##  *
+    ##  * The code to implement this API is not available in the public release
+    ##  * of SQLite.
+    ## ```
+proc rekey_v2*(db: Sqlite3; zDbName: cstring; pKey: pointer; nKey: cint): cint {.
+    importc: "sqlite3_rekey_v2", cdecl.}
+    ## ```
+    ##   * Change the key on an open database.  If the current database is not
+    ##  * encrypted, this routine will encrypt it.  If pNew==0 or nNew==0, the
+    ##  * database is decrypted.
+    ##  *
+    ##  * The code to implement this API is not available in the public release
+    ##  * of SQLite.
+    ## ```
