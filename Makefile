@@ -236,20 +236,18 @@ sqlite.nim: $(SQLITE_NIM)
 # LD_LIBRARY_PATH is supplied when running tests on Linux
 # PATH is supplied when running tests on Windows
 ifeq ($(SQLITE_STATIC),false)
+ PATH_TEST ?= $(shell dirname $(SQLITE_SHARED_LIB))::$${PATH}
  ifeq ($(SSL_STATIC),false)
   LD_LIBRARY_PATH_TEST ?= $(shell dirname $(SQLITE_SHARED_LIB)):$(SSL_LIB_DIR)$${LD_LIBRARY_PATH:+:$${LD_LIBRARY_PATH}}
-  PATH_TEST ?= $(shell dirname $(SQLITE_SHARED_LIB)):$(shell cygpath $(shell dirname $(SSL_LIB_DIR))):$(shell cygpath $(SSL_LIB_DIR)):$${PATH}
  else
   LD_LIBRARY_PATH_TEST ?= $(shell dirname $(SQLITE_SHARED_LIB))$${LD_LIBRARY_PATH:+:$${LD_LIBRARY_PATH}}
-  PATH_TEST ?= $(shell dirname $(SQLITE_SHARED_LIB)):$${PATH}
  endif
 else
+ PATH_TEST ?= $${PATH}
  ifeq ($(SSL_STATIC),false)
   LD_LIBRARY_PATH_TEST ?= $(SSL_LIB_DIR)$${LD_LIBRARY_PATH:+:$${LD_LIBRARY_PATH}}
-  PATH_TEST ?= $(shell cygpath $(shell dirname $(SSL_LIB_DIR))):$(shell cygpath $(SSL_LIB_DIR)):$${PATH}
  else
   LD_LIBRARY_PATH_TEST ?= $${LD_LIBRARY_PATH}
-  PATH_TEST ?= $${PATH}
  endif
 endif
 
