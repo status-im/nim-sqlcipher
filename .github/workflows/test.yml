@@ -8,6 +8,8 @@ on:
 
 jobs:
   tests:
+    env:
+      NPROC: 2
     strategy:
       fail-fast: false
       matrix:
@@ -37,8 +39,6 @@ jobs:
         openssl: [ true, false ]
     name: ${{ matrix.platform.icon }} - SQLITE ${{ matrix.sqlite }} | SSL ${{ matrix.openssl }}
     runs-on: ${{ matrix.platform.os }}-latest
-    env:
-      NPROC: 2
     defaults:
       run:
         shell: ${{ matrix.platform.shell }} {0}
@@ -64,12 +64,13 @@ jobs:
 
       - uses: actions/checkout@v2
         with:
+          fetch-depth: 0
           submodules: recursive
 
       - uses: actions/cache@v2
         with:
           path: vendor/nimbus-build-system/vendor/Nim/bin
-          key: ${{ runner.os }}-2-nim-${{ hashFiles('.gitmodules') }}
+          key: ${{ matrix.platform.os }}-${{ env.NPROC }}-nim-${{ hashFiles('.gitmodules') }}
 
       - name: Install and build dependencies
         run: |
@@ -78,11 +79,11 @@ jobs:
 
       - name: Build the sqlite.nim wrapper and run tests
         run: |
-          make -j${NPROC} "$@" \
+          make -j${NPROC} \
             NIMFLAGS="--parallelBuild:${NPROC}" \
+            SQLITE_STATIC=${{ matrix.sqlite }} \
             SSL_INCLUDE_DIR="${{ matrix.platform.include }}" \
             SSL_LIB_DIR="${{ matrix.platform.lib }}" \
-            SQLITE_STATIC=${{ matrix.sqlite }} \
             SSL_STATIC=${{ matrix.openssl }} \
             V=1 \
             test
