@@ -1,13 +1,9 @@
 .DS_Store
 .idea
 .vscode
-/generator/*
-!/generator/generate.nim
 /lib
 /nimcache
 /sqlite
 /test/build
-/update
-/update.exe
 /vendor/.nimble
 TODO
