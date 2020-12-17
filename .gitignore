@@ -3,6 +3,7 @@
 .vscode
 /lib
 /nimcache
+/sqlcipher.nims
 /sqlite
 /test/build
 /vendor/.nimble
