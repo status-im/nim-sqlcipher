@@ -188,7 +188,7 @@ sqlcipher: $(SQLCIPHER_LIB)
 # LD_LIBRARY_PATH is supplied when running tests on Linux
 # PATH is supplied when running tests on Windows
 ifeq ($(SQLCIPHER_STATIC),false)
- PATH_TEST ?= $(shell dirname $(SQLCIPHER_LIB))::$${PATH}
+ PATH_TEST ?= $(shell dirname $(SQLCIPHER_LIB)):$${PATH}
  ifeq ($(SSL_STATIC),false)
   LD_LIBRARY_PATH_TEST ?= $(shell dirname $(SQLCIPHER_LIB)):$(SSL_LIB_DIR)$${LD_LIBRARY_PATH:+:$${LD_LIBRARY_PATH}}
  else
