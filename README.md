@@ -3,8 +3,7 @@
 ![Stability: experimental](https://img.shields.io/badge/Stability-experimental-orange.svg)
 [![Tests (GitHub Actions)](https://github.com/status-im/nim-sqlcipher/workflows/Tests/badge.svg?branch=master)](https://github.com/status-im/nim-sqlcipher/actions?query=workflow%3ATests+branch%3Amaster)
 
-A nim wrapper for the [SQLCipher](https://github.com/sqlcipher/sqlcipher).
-It builds SQLCipher and provides a simple API based on the [Tiny_SQLite](https://github.com/GULPF/tiny_sqlite) nimble package
+Nim wrapper for [SQLCipher](https://github.com/sqlcipher/sqlcipher). It builds SQLCipher and provides a simple API based on [tiny_sqlite](https://github.com/GULPF/tiny_sqlite).
 
 ## Requirements
 ```
@@ -14,8 +13,8 @@ sudo apt install libssl-dev
 # MacOS
 brew install openssl
 
-# Windows
-¯\_(ツ)_/¯
+# Windows (msys2)
+pacman -S mingw-w64-x86_64-openssl
 ```
 
 ## Usage
@@ -26,9 +25,7 @@ TODO
 
 ### Wrapper License
 
-This repository is licensed and distributed under either of
-
-* MIT license: [LICENSE-MIT](LICENSE-MIT) or http://opensource.org/licenses/MIT
+Licensed and distributed under the [MIT License](https://github.com/status-im/nim-sqlcipher/blob/master/LICENSE).
 
 ### Dependency Licenses
 
