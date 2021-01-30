@@ -7,7 +7,7 @@ license     = "MIT"
 skipDirs    = @["test"]
 
 requires "nim >= 1.2.0",
-  "nimterop"
+  "stew"
 
 import strutils
 

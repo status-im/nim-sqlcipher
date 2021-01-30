@@ -29,6 +29,8 @@ Licensed and distributed under the [MIT License](https://github.com/status-im/ni
 
 ### Dependency Licenses
 
+- OpenSSL https://github.com/openssl/openssl/blob/master/LICENSE.txt
 - SQLCipher https://github.com/sqlcipher/sqlcipher/blob/master/LICENSE
-- OpenSSL https://github.com/openssl/openssl/blob/master/LICENSE
-- TinySQLite https://github.com/GULPF/tiny_sqlite/blob/master/LICENSE
+- nim-stew https://github.com/status-im/nim-stew#license
+- nimbus-build-system https://github.com/status-im/nimbus-build-system/#license
+- tiny_sqlite https://github.com/GULPF/tiny_sqlite/blob/master/LICENSE
