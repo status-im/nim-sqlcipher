@@ -75,6 +75,9 @@ proc hasRows*(rows: seq[ResultRow]): bool = rows.len > 0
 template dbColumnName*(name: string) {.pragma.}
     ## Specifies the database column name for the object property
 
+template dbIgnore*() {.pragma.}
+    ## Specifies the object property should not be considered a DB column
+
 template dbTableName*(name: string) {.pragma.}
     ## Specifies the database table name for the object
 
@@ -95,9 +98,9 @@ template tableName*(obj: auto | typedesc): string =
 
 
 template enumInstanceDbColumns*(obj: auto,
-                                fieldNameVar, fieldVar,
+                                fieldNameVar, fieldVar, fieldIgnore,
                                 body: untyped) =
-    ## Expands a block over all serialized fields of an object.
+    ## Expands a block over all fields of an object.
     ##
     ## Inside the block body, the passed `fieldNameVar` identifier
     ## will refer to the name of each field as a string. `fieldVar`
@@ -108,16 +111,22 @@ template enumInstanceDbColumns*(obj: auto,
     type ObjType {.used.} = type(obj)
 
     for fieldName, fieldVar in fieldPairs(obj):
-        when hasCustomPragmaFixed(ObjType, fieldName, dbColumnName):
+        when hasCustomPragmaFixed(ObjType, fieldName, dbIgnore):
+            const fieldIgnore = true
+            const fieldNameVar = fieldName
+        elif hasCustomPragmaFixed(ObjType, fieldName, dbColumnName):
+            const fieldIgnore = false
             const fieldNameVar = getCustomPragmaFixed(ObjType, fieldName, dbColumnName)
         else:
+            const fieldIgnore = false
             const fieldNameVar = fieldName
         body
 
 proc unpack*(row: ResultRow, obj: var object) =
-    obj.enumInstanceDbColumns(dbColName, property):
-        type ColType = type property
-        property = row[dbColName, ColType]
+    obj.enumInstanceDbColumns(dbColName, property, ignore):
+        if not ignore:
+            type ColType = type property
+            property = row[dbColName, ColType]
 
 #
 # Custom.sqlcipher
