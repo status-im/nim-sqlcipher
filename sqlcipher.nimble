@@ -45,3 +45,4 @@ proc buildAndRunTest(name: string,
 
 task tests, "Run all tests":
   buildAndRunTest "db_smoke"
+  buildAndRunTest "sqlite_boolean_literals"
