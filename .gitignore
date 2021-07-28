@@ -1,5 +1,6 @@
 .DS_Store
 .idea
+.update.timestamp
 .vscode
 /lib
 /nimcache

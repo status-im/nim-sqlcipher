@@ -1,4 +1,4 @@
-import std / [options, macros, typetraits], sequtils, unicode
+import std / [options, macros, typetraits], sequtils, unicode, strutils
 
 from sqlite_wrapper as sqlite import nil
 from stew/shims/macros as stew_macros import hasCustomPragmaFixed, getCustomPragmaFixed
@@ -179,7 +179,24 @@ proc toDbValues*(values: varargs[DbValue, toDbValue]): seq[DbValue] =
 
 proc fromDbValue*(value: DbValue, T: typedesc[Ordinal]): T =
     # Convert a DbValue to an ordinal.
-    value.intVal.T
+
+    ### START CUSTOM SUPPORT ###
+    # FOR STRING REPRESENTATIONS OF BOOLEANS.
+    # SQLITE VERSIONS <3.23.0 DID NOT AUTOMATICALLY TRANSLATE BOOLEAN
+    # LITERALS IN SQL SYNTAX TO 0/1. SEE https://sqlite.org/lang_expr.html
+    # (section 14) FOR MORE DETAIL.
+    when T is bool:
+        if (value.kind == sqliteText):
+            try:
+                result = value.strVal.toLower.parseBool
+            except ValueError as ve:
+                ve.msg = "Error parsing string value into boolean: " & ve.msg
+                raise ve
+        else:
+            result = value.intVal.T
+    else:
+        ### END CUSTOM SUPPORT ###
+        value.intVal.T
 
 proc fromDbValue*(value: DbValue, T: typedesc[SomeFloat]): float64 =
     ## Convert a DbValue to a float.
